@@ -596,30 +596,32 @@ void Player_Sonic_DropDashCharge(Player *p)
 
 void Player_Sonic_DropDash(Player *p)
 {
-
     // Check if drop dash is doable
-    if (!(p->heldInput & gPlayerControls.jump) || !(p->charState == CHARSTATE_SONIC_DROPDASH_CHARGE)) {
-        return;
+    if (p->heldInput & gPlayerControls.jump) {
+
+        // Get Speed
+        s32 baseVelocity = ABS(Q(p->speedGroundX * Q(0.25)));
+        s32 speed = MAX(Q(8.0) + p->dropdashAccel, Q(12.0));
+
+        if (p->dropdashAccel < Q(4)) {
+            speed += MAX(baseVelocity, Q(4.0) - p->dropdashAccel);
+        }
+
+        // Get Direction
+        if (p->heldInput & DPAD_SIDEWAYS) {
+            speed = (p->heldInput & DPAD_LEFT ? -speed : speed);
+        } else if (!(gPlayer.spriteInfoBody->s.frameFlags & SPRITE_FLAG_MASK_X_FLIP))
+            speed = -speed;
+
+        // set state to roll
+        PLAYERFN_SET(Player_8025A0C);
+
+        // Set Speed and roll state
+        m4aSongNumStart(SE_SPIN_DASH_RELEASE);
+        CreateSpindashDustEffect();
+        p->speedGroundX = speed;
+        p->dropdashAccel = 0;
     }
-
-    // Get Speed
-    s32 baseVelocity = ABS(p->speedGroundX / 4);
-    s32 speed = Q(8.0) + p->dropdashAccel + baseVelocity;
-
-    // Get Direction
-    if (p->heldInput & DPAD_SIDEWAYS) {
-        speed = (p->heldInput & DPAD_LEFT ? -speed : speed);
-    } else if (!(gPlayer.spriteInfoBody->s.frameFlags & SPRITE_FLAG_MASK_X_FLIP))
-        speed = -speed;
-
-    // set state to roll
-    PLAYERFN_SET(Player_8025A0C);
-
-    // Set Speed and roll state
-    m4aSongNumStart(SE_SPIN_DASH_RELEASE);
-    CreateSpindashDustEffect();
-    p->speedGroundX = speed;
-    p->dropdashAccel = 0;
 }
 
 bool32 Player_Sonic_TryForwardThrust(Player *p)
