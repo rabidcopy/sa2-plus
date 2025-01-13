@@ -237,7 +237,7 @@ void Player_SonicAmy_WindupSkidAttack(Player *p)
         }
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
 
 void Player_SonicAmy_SkidAttack(Player *p)
@@ -266,7 +266,7 @@ void Player_SonicAmy_SkidAttack(Player *p)
         }
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 
     if (!(p->moveState & MOVESTATE_IN_AIR)) {
         sub_8029FA4(p);
@@ -508,7 +508,7 @@ void Player_80123D0(Player *p)
         PLAYERFN_SET(Player_TouchGround);
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
 
 void Player_SonicAmy_WindupStopNSlam(Player *p)
@@ -544,7 +544,7 @@ void Player_SonicAmy_StopNSlam_AfterGroundCollision(Player *p)
 
 void Player_SonicAmy_StopNSlam_FallAfterCollision(Player *p)
 {
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 
     if (!(p->moveState & MOVESTATE_IN_AIR)) {
         p->transition = PLTRANS_TOUCH_GROUND;
@@ -565,7 +565,7 @@ void Player_Sonic_HomingAttack(Player *p)
         p->moveState &= ~MOVESTATE_BOOST_EFFECT_ON;
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 
     if (!(p->moveState & MOVESTATE_IN_AIR)) {
         // Hit ground instead of targeted enemy
@@ -771,7 +771,7 @@ void Player_Cream_ChaoAttack(Player *p)
         }
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
 
 void Player_Cream_InitStepAttack(Player *p)
@@ -830,7 +830,7 @@ void Player_Cream_StepAttack(Player *p)
         }
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
 
 // Mid-Air: Down-B
@@ -842,7 +842,7 @@ void Player_Cream_ChaoRollingAttack(Player *p)
         }
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 
     if (!(p->moveState & MOVESTATE_IN_AIR)) {
         p->transition = PLTRANS_TOUCH_GROUND;
@@ -851,7 +851,7 @@ void Player_Cream_ChaoRollingAttack(Player *p)
 
 void Player_Cream_WindupMidAirChaoAttack(Player *p)
 {
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 
     if (!(p->moveState & MOVESTATE_IN_AIR)) {
         p->transition = PLTRANS_TOUCH_GROUND;
@@ -1057,7 +1057,7 @@ void Player_Tails_TailSwipe(Player *p)
         PLAYERFN_SET(Player_TouchGround);
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
 
 /* Character: Knuckles */
@@ -1155,7 +1155,7 @@ void Player_Knuckles_PunchLeft(Player *p)
         }
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
 
 void Player_Knuckles_PunchRight(Player *p)
@@ -1182,7 +1182,7 @@ void Player_Knuckles_PunchRight(Player *p)
         }
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
 
 void Player_Knuckles_InitSpiralAttack(Player *p)
@@ -1230,7 +1230,7 @@ void Player_Knuckles_SpiralAttack(Player *p)
         PLAYERFN_SET(Player_8013B6C);
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
 
 void Player_Knuckles_Glide_UpdateFrames(Player *p)
@@ -1868,7 +1868,7 @@ void Player_8013B6C(Player *p)
         }
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
 
 void Player_Knuckles_Glide(Player *p)
@@ -1892,7 +1892,7 @@ void Player_Knuckles_GlideSoftLanding(Player *p)
         p->transition = PLTRANS_TOUCH_GROUND;
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
 
 void Player_Knuckles_GlideHardLanding(Player *p)
@@ -2042,7 +2042,7 @@ void Player_Knuckles_DrillClaw(Player *p)
 
 void Player_8013E34(Player *p)
 {
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 
     p->speedGroundX = 0;
     p->speedAirX = 0;
@@ -2142,5 +2142,5 @@ void Player_Amy_HammerAttack(Player *p)
         PLAYERFN_SET(Player_TouchGround);
     }
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 }
