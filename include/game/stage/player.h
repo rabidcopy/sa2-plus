@@ -27,6 +27,7 @@ void sub_8023610(Player *);
 void Player_Idle(Player *);
 void Player_TouchGround(Player *p);
 void Player_80261D8(Player *p);
+void Player_SpinAttack(Player *);
 void Player_HandlePhysicsWithAirInput(Player *p);
 void sub_8028204(Player *p);
 void sub_80282EC(Player *p);

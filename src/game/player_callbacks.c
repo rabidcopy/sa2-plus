@@ -587,7 +587,7 @@ void Player_Sonic_DropDashCharge(Player *p)
     // Increment Dropdash accelleration
     p->dropdashAccel = MAX(p->dropdashAccel + Q(0.2), Q(4));
 
-    sub_8027EF0(p);
+    Player_HandlePhysicsWithAirInput(p);
 
     if (!(p->moveState & MOVESTATE_IN_AIR)) {
         Player_Sonic_DropDash(p);
@@ -614,7 +614,7 @@ void Player_Sonic_DropDash(Player *p)
             speed = -speed;
 
         // set state to roll
-        PLAYERFN_SET(Player_8025A0C);
+        PLAYERFN_SET(Player_SpinAttack);
 
         // Set Speed and roll state
         m4aSongNumStart(SE_SPIN_DASH_RELEASE);
