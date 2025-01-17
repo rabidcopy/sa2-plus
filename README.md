@@ -17,7 +17,8 @@
 [discord-link]: https://discord.gg/vZTvVH3gA9
 
 This is a modification of the Sonic Advance 2 decomp by freshollie and JaceCear, intended to expand the character movesets or add new features for fun!
-Adds the following features
+
+Adds the following features:
 - **Drop Dash** for Sonic.
 - **Air Dash** has been moved to R.
 
