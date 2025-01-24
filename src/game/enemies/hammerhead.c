@@ -87,11 +87,11 @@ static void Task_Hammerhead(void)
         s->y = (posY - gCamera.y) + I(prevUnk48);
     }
 
-    if ((p->moveState & MOVESTATE_8) && (p->unk3C == s)) {
+    if ((p->moveState & MOVESTATE_STOOD_ON_OBJ) && (p->stoodObj == s)) {
         p->qWorldY += 0x100;
         p->qWorldY += ip;
     }
-    if (!(p->moveState & MOVESTATE_400000)) {
+    if (!(p->moveState & MOVESTATE_IA_OVERRIDE)) {
         s32 flags = sub_800CCB8(s, posX, posY + I(hammerhead->unk48), p);
 
         if (flags & 0x10000) {
@@ -130,8 +130,8 @@ static void TaskDestructor_Hammerhead(struct Task *t)
     Sprite *s = &hammerhead->s;
     VramFree(s->graphics.dest);
 
-    if ((gPlayer.moveState & MOVESTATE_8) && (gPlayer.unk3C == s)) {
-        gPlayer.moveState &= ~MOVESTATE_8;
-        gPlayer.unk3C = NULL;
+    if ((gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ) && (gPlayer.stoodObj == s)) {
+        gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
+        gPlayer.stoodObj = NULL;
     }
 }

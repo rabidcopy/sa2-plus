@@ -909,11 +909,11 @@ void sub_80777C8(Sprite_Pipe_Horn *pipe)
 {
     Player_ClearMovestate_IsInScriptedSequence();
 
-    gPlayer.moveState &= ~MOVESTATE_400000;
-    gPlayer.transition = PLTRANS_PT5;
+    gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
+    gPlayer.transition = PLTRANS_UNCURL;
 
-    gPlayer.speedAirX = gUnknown_080DFE90[pipe->kind][0];
-    gPlayer.speedAirY = gUnknown_080DFE90[pipe->kind][1];
+    gPlayer.qSpeedAirX = gUnknown_080DFE90[pipe->kind][0];
+    gPlayer.qSpeedAirY = gUnknown_080DFE90[pipe->kind][1];
     gPlayer.rotation = gUnknown_080DFEB4[pipe->kind];
 
     m4aSongNumStart(gUnknown_080DFED0[pipe->kind]);
@@ -968,15 +968,15 @@ void sub_80778E4(Sprite_Pipe_Horn *pipe)
 {
     Player_SetMovestate_IsInScriptedSequence();
 
-    gPlayer.moveState |= MOVESTATE_400000;
+    gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
     gPlayer.charState = CHARSTATE_SPIN_ATTACK;
 
     m4aSongNumStart(SE_SPIN_ATTACK);
 
     gPlayer.moveState &= ~MOVESTATE_FACING_LEFT;
 
-    gPlayer.speedAirX = 0;
-    gPlayer.speedAirY = 0;
+    gPlayer.qSpeedAirX = 0;
+    gPlayer.qSpeedAirY = 0;
 
     sub_8077774(pipe, Q(pipe->posX), Q(pipe->posY + 4));
 
@@ -1028,8 +1028,8 @@ void sub_8077A3C(void)
         gCurTask->main = sub_80778AC;
     } else {
         gPlayer.rotation = 0;
-        gPlayer.speedAirX = 1;
-        gPlayer.speedAirY = 0;
+        gPlayer.qSpeedAirX = 1;
+        gPlayer.qSpeedAirY = 0;
 
         if (sub_8077788(pipe, gUnknown_08C8793C[pipe->kind]) == 0) {
             sub_80777C8(pipe);
@@ -1058,8 +1058,8 @@ void sub_8077ABC(void)
     } else {
         gPlayer.rotation = 0x20;
 
-        gPlayer.speedAirX = 1;
-        gPlayer.speedAirY = 1;
+        gPlayer.qSpeedAirX = 1;
+        gPlayer.qSpeedAirY = 1;
 
         if (sub_8077788(horn, gUnknown_08C87960[horn->kind]) == 0) {
             sub_8077B28(horn);
@@ -1073,16 +1073,16 @@ void sub_8077B28(Sprite_Pipe_Horn *horn)
 {
 #ifndef MODERN
     Player_ClearMovestate_IsInScriptedSequence();
-    gPlayer.moveState &= ~(MOVESTATE_400000);
+    gPlayer.moveState &= ~(MOVESTATE_IA_OVERRIDE);
 #else
     // Doing this inline is faster, and
     // personally more comprehensible.
-    gPlayer.moveState &= ~(MOVESTATE_IN_SCRIPTED | MOVESTATE_400000);
+    gPlayer.moveState &= ~(MOVESTATE_IN_SCRIPTED | MOVESTATE_IA_OVERRIDE);
 #endif
 
-    gPlayer.transition = PLTRANS_PT5;
-    gPlayer.speedAirX = gUnknown_080DFFF4[horn->kind][0];
-    gPlayer.speedAirY = gUnknown_080DFFF4[horn->kind][1];
+    gPlayer.transition = PLTRANS_UNCURL;
+    gPlayer.qSpeedAirX = gUnknown_080DFFF4[horn->kind][0];
+    gPlayer.qSpeedAirY = gUnknown_080DFFF4[horn->kind][1];
     gPlayer.rotation = gUnknown_080E0000[horn->kind];
 
     m4aSongNumStart(SE_MUSIC_PLANT_EXIT_HORN);
@@ -1137,14 +1137,14 @@ void sub_8077C3C(Sprite_Pipe_Horn *horn)
 {
     Player_SetMovestate_IsInScriptedSequence();
 
-    gPlayer.moveState |= MOVESTATE_400000;
+    gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
     gPlayer.charState = CHARSTATE_SPIN_ATTACK;
 
     m4aSongNumStart(SE_SPIN_ATTACK);
 
     gPlayer.moveState &= ~(MOVESTATE_FACING_LEFT);
-    gPlayer.speedAirX = 0;
-    gPlayer.speedAirY = 0;
+    gPlayer.qSpeedAirX = 0;
+    gPlayer.qSpeedAirY = 0;
 
     sub_8077774(horn, Q(horn->posX), Q(horn->posY));
 

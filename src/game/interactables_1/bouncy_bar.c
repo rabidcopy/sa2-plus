@@ -88,12 +88,12 @@ void Task_BouncyBarIdle(void)
     s->x = screenX - gCamera.x;
     s->y = screenY - gCamera.y;
 
-    if (!(gPlayer.moveState & MOVESTATE_DEAD) && (sub_800C204(s, screenX, screenY, 0, &gPlayer, 0) == 1) && (gPlayer.speedAirY > 0)
+    if (!(gPlayer.moveState & MOVESTATE_DEAD) && (sub_800C204(s, screenX, screenY, 0, &gPlayer, 0) == 1) && (gPlayer.qSpeedAirY > 0)
         && (I(gPlayer.qWorldY) + 4) < screenY) {
         gPlayer.charState = CHARSTATE_CURLED_IN_AIR;
-        gPlayer.transition = PLTRANS_PT5;
+        gPlayer.transition = PLTRANS_UNCURL;
 
-        bar->unk3C = gPlayer.speedAirY >> 0xA;
+        bar->unk3C = gPlayer.qSpeedAirY >> 0xA;
         if (bar->unk3C > 2) {
             bar->unk3C = 2;
         }
@@ -104,7 +104,7 @@ void Task_BouncyBarIdle(void)
         bar->unk40 = screenX - I(gPlayer.qWorldX) >= 0 ? screenX - I(gPlayer.qWorldX) : I(gPlayer.qWorldX) - screenX;
 
         gCurTask->main = Task_BouncyBarLaunch;
-        gPlayer.moveState |= MOVESTATE_400000;
+        gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
 
         bar->unk3C = 2 - bar->unk3C;
         s->graphics.anim = 538;
@@ -139,7 +139,7 @@ void Task_BouncyBarLaunch(void)
         s8 temp;
         bar->unk3D--;
         gPlayer.qWorldY += bar->unk40 * bar->unk3E;
-        gPlayer.speedAirY = 0;
+        gPlayer.qSpeedAirY = 0;
 
         if (bar->unk3D == 0) {
             temp = (bar->unk40 >> 1) + (bar->unk40 >> 2);
@@ -148,9 +148,9 @@ void Task_BouncyBarLaunch(void)
                 temp = 0x18;
             }
 
-            gPlayer.speedAirY = gUnknown_080D94F2[bar->unk3C];
-            gPlayer.speedAirY += ((temp * bar->unk3E) * gUnknown_080D94EE[bar->unk3C]) >> 1;
-            gPlayer.moveState &= ~MOVESTATE_400000;
+            gPlayer.qSpeedAirY = gUnknown_080D94F2[bar->unk3C];
+            gPlayer.qSpeedAirY += ((temp * bar->unk3E) * gUnknown_080D94EE[bar->unk3C]) >> 1;
+            gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
             gPlayer.moveState &= ~MOVESTATE_100;
         }
     }

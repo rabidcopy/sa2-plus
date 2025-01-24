@@ -81,7 +81,7 @@ struct Task *SpawnDrowningCountdownNum(Player *p, s32 countdown)
     ts->unk8 = 0;
     ts->unkA = 0x120;
     ts->unk10 = 0;
-    ts->mpPlayerID = p->unk60;
+    ts->mpPlayerID = p->playerID;
 
     s = &ts->s;
     s->graphics.dest = VramMalloc(4);
@@ -167,7 +167,7 @@ bool32 RandomlySpawnAirBubbles(Player *p)
             if (!(p->moveState & MOVESTATE_FACING_LEFT))
                 randX = -randX;
 
-            SpawnAirBubbles(p->qWorldX - randX, p->qWorldY - randY, p->speedAirX, ((u32)PseudoRandom32() & 0x100) >> 8);
+            SpawnAirBubbles(p->qWorldX - randX, p->qWorldY - randY, p->qSpeedAirX, ((u32)PseudoRandom32() & 0x100) >> 8);
 
             result = TRUE;
         }

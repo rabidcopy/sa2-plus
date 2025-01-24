@@ -63,9 +63,9 @@ static void SuperSonicInitPlayer(void)
     p->unk4 = 0;
     p->qWorldX = 0;
     p->qWorldY = 0;
-    p->speedAirX = 0;
-    p->speedAirY = 0;
-    p->speedGroundX = 0;
+    p->qSpeedAirX = 0;
+    p->qSpeedAirY = 0;
+    p->qSpeedGround = 0;
     p->spriteOffsetX = 0;
     p->spriteOffsetY = 0;
     // /* 0x18 */ u8 filler18[8]; // no idea what this data is and why it's not set
@@ -79,26 +79,26 @@ static void SuperSonicInitPlayer(void)
     p->timerInvulnerability = 0;
     p->timerInvincibility = 0;
     p->timerSpeedup = 0;
-    p->unk32 = 0;
-    p->unk34 = 0;
-    p->unk36 = 0;
+    p->confusionTimer = 0;
+    p->itemEffect20Timer = 0;
+    p->disableTrickTimer = 0;
     p->itemEffect = 0;
     p->layer = 0;
-    p->unk3C = NULL;
-    p->unk40 = 0;
-    p->unk44 = 0;
-    p->unk48 = 0;
-    p->unk4C = 0;
-    p->unk50 = 0;
-    p->unk52 = 0;
-    p->unk54 = 0;
+    p->stoodObj = NULL;
+    p->maxSpeed = 0;
+    p->topSpeed = 0;
+    p->acceleration = 0;
+    p->deceleration = 0;
+    p->rollingDeceleration = 0;
+    p->boostThreshold = 0;
+    p->walkAnim = 0;
     p->unk56 = 0;
-    p->unk58 = 0;
+    p->boostSpeed = 0;
     p->isBoosting = FALSE;
-    p->unk5B = 0;
+    p->trickDir = 0;
     p->heldInput = 0;
     p->frameInput = 0;
-    p->unk60 = 0;
+    p->playerID = 0;
     p->unk61 = 0;
     p->unk62 = 0;
     p->unk63 = 0;
@@ -138,8 +138,8 @@ void SuperSonicInit()
 
     gPlayer.moveState = 0;
     gPlayer.checkpointTime = 0;
-    gPlayer.speedAirX = Q(2.0);
-    gPlayer.speedGroundX = Q(2.0);
+    gPlayer.qSpeedAirX = Q(2.0);
+    gPlayer.qSpeedGround = Q(2.0);
 
     gCourseTime = 0;
 

@@ -193,16 +193,16 @@ void sub_807608C(Sprite_GuitarString *gs)
 {
     if (PLAYER_IS_ALIVE) {
         Player_SetMovestate_IsInScriptedSequence();
-        gPlayer.moveState |= MOVESTATE_400000;
+        gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
 
         gPlayer.charState = CHARSTATE_SPIN_ATTACK;
-        gPlayer.speedAirX = 0;
-        gPlayer.speedAirY = (s32)(gPlayer.speedAirY * 3) >> 1;
+        gPlayer.qSpeedAirX = 0;
+        gPlayer.qSpeedAirY = (s32)(gPlayer.qSpeedAirY * 3) >> 1;
 
-        CLAMP_INLINE(gPlayer.speedAirY, GUITARSTR_MIN_ACCEL, GUITARSTR_MAX_ACCEL);
+        CLAMP_INLINE(gPlayer.qSpeedAirY, GUITARSTR_MIN_ACCEL, GUITARSTR_MAX_ACCEL);
     }
 
-    gs->unk74 = (u16)gPlayer.speedAirY * 2;
+    gs->unk74 = (u16)gPlayer.qSpeedAirY * 2;
 
     if (gs->unk74 < GUITARSTR_MIN_ACCEL) {
         gs->unk74 = GUITARSTR_MIN_ACCEL;
@@ -241,7 +241,7 @@ void sub_8076114(Sprite_GuitarString *gs)
 
 bool32 sub_807618C(Sprite_GuitarString *gs)
 {
-    if (PLAYER_IS_ALIVE && gPlayer.speedAirY > 0) {
+    if (PLAYER_IS_ALIVE && gPlayer.qSpeedAirY > 0) {
         s16 screenX = gs->posX - gCamera.x;
         s16 screenY = gs->posY - gCamera.y;
         s16 playerX = I(gPlayer.qWorldX) - gCamera.x;
@@ -277,9 +277,9 @@ void sub_8076258(Sprite_GuitarString UNUSED *gs)
 {
     if (PLAYER_IS_ALIVE) {
         Player_ClearMovestate_IsInScriptedSequence();
-        gPlayer.moveState &= ~MOVESTATE_400000;
-        gPlayer.transition = PLTRANS_PT5;
-        gPlayer.speedAirY = -gPlayer.speedAirY;
+        gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
+        gPlayer.transition = PLTRANS_UNCURL;
+        gPlayer.qSpeedAirY = -gPlayer.qSpeedAirY;
         m4aSongNumStart(SE_MUSIC_PLANT_GUITAR_STRING);
     }
 

@@ -189,8 +189,8 @@ void CreateEggGoRound(void)
     gUnknown_03005AA0.s.frameFlags &= ~SPRITE_FLAG_MASK_PRIORITY;
     gUnknown_03005AA0.s.frameFlags |= SPRITE_FLAG(PRIORITY, 1);
 
-    gPlayer.unk3C = NULL;
-    gPlayer.moveState &= ~MOVESTATE_8;
+    gPlayer.stoodObj = NULL;
+    gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
 
     gActiveBossTask = TaskCreate(Task_IntroRollIn, sizeof(EggGoRound), 0x4000, 0, TaskDestructor_EggGoRound);
     boss = TASK_DATA(gActiveBossTask);
@@ -423,8 +423,8 @@ static void Task_Main(void)
         boss->timer = 128;
         boss->destructionProps.explosionState = 0;
 
-        gPlayer.unk3C = NULL;
-        gPlayer.moveState &= ~MOVESTATE_8;
+        gPlayer.stoodObj = NULL;
+        gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
         gPlayer.moveState |= MOVESTATE_IN_AIR;
 
         Player_DisableInputAndBossTimer();
@@ -456,8 +456,8 @@ static void Task_DestructionCutScene1(void)
     SetPalette(boss);
     sub_8047060(boss);
 
-    gPlayer.unk3C = NULL;
-    gPlayer.moveState &= ~MOVESTATE_8;
+    gPlayer.stoodObj = NULL;
+    gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
 
     if (--boss->timer == 0) {
         boss->linkRotOffset = 0;
@@ -812,14 +812,14 @@ static void sub_8046C28(EggGoRound *boss)
             s32 y = I(boss->y) + ((SIN(idx) * platformPos) >> 14);
 
             if (boss->unk1E != 0 && boss->unk24 == 0 && (i % 2) && (boss->state == 1 || boss->state == 2)
-                && ((gPlayer.moveState & MOVESTATE_8) && gPlayer.unk3C == s)) {
-                gPlayer.moveState &= ~MOVESTATE_8;
+                && ((gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ) && gPlayer.stoodObj == s)) {
+                gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
                 gPlayer.moveState &= ~MOVESTATE_100;
                 gPlayer.moveState |= 2;
-                gPlayer.unk3C = NULL;
-                gPlayer.speedAirX += BOSS_X_SPEED;
-                gPlayer.speedGroundX += BOSS_X_SPEED;
-                gPlayer.speedAirY = -Q(2);
+                gPlayer.stoodObj = NULL;
+                gPlayer.qSpeedAirX += BOSS_X_SPEED;
+                gPlayer.qSpeedGround += BOSS_X_SPEED;
+                gPlayer.qSpeedAirY = -Q(2);
                 continue;
             }
 
@@ -828,23 +828,23 @@ static void sub_8046C28(EggGoRound *boss)
                 u8 someBool;
                 s32 speedAirY;
 
-                if (gPlayer.unk3C == s) {
+                if (gPlayer.stoodObj == s) {
                     someBool = TRUE;
                 } else {
                     someBool = FALSE;
                 }
-                speedAirY = gPlayer.speedAirY;
+                speedAirY = gPlayer.qSpeedAirY;
 
-                if (gPlayer.moveState & MOVESTATE_IN_AIR || (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s)) {
+                if (gPlayer.moveState & MOVESTATE_IN_AIR || (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s)) {
                     val = sub_800CCB8(s, x, y, &gPlayer);
                 } else {
                     val = 0;
                 }
 
                 if (val & 0x10000) {
-                    if (!someBool && gPlayer.unk3C == s && speedAirY > 0) {
-                        gPlayer.speedAirX -= BOSS_X_SPEED;
-                        gPlayer.speedGroundX -= BOSS_X_SPEED;
+                    if (!someBool && gPlayer.stoodObj == s && speedAirY > 0) {
+                        gPlayer.qSpeedAirX -= BOSS_X_SPEED;
+                        gPlayer.qSpeedGround -= BOSS_X_SPEED;
                     }
 
                     if (boss->unk1E != 0 && !boss->unk24 && !(i % 2) && (boss->state == 0 || boss->state == 2)) {
@@ -858,8 +858,8 @@ static void sub_8046C28(EggGoRound *boss)
                         gPlayer.qWorldX += Q(x - (boss->prevPlatformXPositions[i]));
                     }
                 } else if (someBool) {
-                    gPlayer.moveState &= ~MOVESTATE_8;
-                    gPlayer.unk3C = NULL;
+                    gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
+                    gPlayer.stoodObj = NULL;
                     if (!(gPlayer.moveState & MOVESTATE_100)) {
                         gPlayer.moveState &= ~MOVESTATE_100;
                         gPlayer.moveState |= MOVESTATE_IN_AIR;
@@ -1186,11 +1186,11 @@ static void HandleCollisions(EggGoRound *boss)
 
     if (sub_800C320(s, x, y, 1, &gPlayer) != 0) {
         if (gPlayer.qWorldX > boss->x) {
-            gPlayer.speedAirX += Q(2.25);
+            gPlayer.qSpeedAirX += Q(2.25);
             gPlayer.qWorldX += Q(2);
         }
 
-        gPlayer.speedAirY += Q(2);
+        gPlayer.qSpeedAirY += Q(2);
         return;
     }
 

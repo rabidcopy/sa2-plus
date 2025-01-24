@@ -453,18 +453,19 @@ void SetupEggmanKidnapsVanillaTask(void)
     gDispCnt = (DISPCNT_BG0_ON | DISPCNT_BG1_ON | DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP | DISPCNT_MODE_1);
 }
 
-// (39.42%) https://decomp.me/scratch/CKySX
-// (77.90%) https://decomp.me/scratch/cSWIn
-NONMATCH("asm/non_matching/game/bosses/boss_9__CreateTrueArea53Boss.inc", void CreateTrueArea53Boss(void))
+void CreateTrueArea53Boss(void)
 {
-    void *vram;
     TA53Boss *boss;
     TA53_unk1C *unk1C;
     TA53_unk48 *unk48;
     TA53_unk98 *unk98;
+    // Required to be here for match
+    s32 unused;
     TA53_unk558 *unk558;
     TA53_unk594 *unk594;
     TA53_unk654 *unk654;
+    ScreenFade *fade;
+    void *vram;
     Sprite *s;
     u32 i, j;
 
@@ -484,18 +485,21 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__CreateTrueArea53Boss.inc", void C
 
     boss->lives = 12;
     boss->unkD = 0;
+
     boss->unk10 = 1;
     boss->unk12 = 80;
     boss->unkE = 0;
     boss->unkF = 0;
     boss->qPos.x = 0;
     boss->qPos.y = 0;
-    boss->fade.window = 0;
-    boss->fade.brightness = Q(0);
-    boss->fade.flags = SCREEN_FADE_FLAG_LIGHTEN;
-    boss->fade.speed = 20;
-    boss->fade.bldCnt = (BLDCNT_EFFECT_LIGHTEN | BLDCNT_TGT1_ALL);
-    boss->fade.bldAlpha = 1;
+
+    fade = &boss->fade;
+    fade->window = 0;
+    fade->brightness = Q(0);
+    fade->flags = SCREEN_FADE_FLAG_LIGHTEN;
+    fade->speed = 20;
+    fade->bldCnt = (BLDCNT_EFFECT_LIGHTEN | BLDCNT_TGT1_ALL);
+    fade->bldAlpha = 0;
 
     unk558 = &boss->unk558;
     unk558->callback = sub_8050DC8;
@@ -514,9 +518,9 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__CreateTrueArea53Boss.inc", void C
     unk1C->unk14 = unk1C->unk16;
     unk1C->unk18 = 0;
 
-    for (i = 0; i < 4; i++) {
-        unk1C->unk4[i] = gUnknown_080D8C4C[i];
-        unk1C->unkC[i] = gUnknown_080D8C54[i];
+    for (j = 0; j < 4; j++) {
+        unk1C->unk4[j] = gUnknown_080D8C4C[j];
+        unk1C->unkC[j] = gUnknown_080D8C64[j];
     }
 
     unk48->unk30 &= 0xFFF;
@@ -531,12 +535,12 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__CreateTrueArea53Boss.inc", void C
     unk48->unk30 = 0;
     unk48->unk4;
 
-    for (i = 0; i < 4; i++) {
-        unk48->unk4[i] = gUnknown_080D8A1C[0][i];
-        unk48->unkC[i] = gUnknown_080D8A34[0][i];
-        unk48->unk14[i] = gUnknown_080D8A4C[0][i];
-        unk48->unk1C[i] = gUnknown_080D8A64[0][i];
-        unk48->unk24[i] = gUnknown_080D8A7C[0][i];
+    for (j = 0; j < 4; j++) {
+        unk48->unk4[j] = gUnknown_080D8A1C[0][j];
+        unk48->unkC[j] = gUnknown_080D8A34[0][j];
+        unk48->unk14[j] = gUnknown_080D8A4C[0][j];
+        unk48->unk1C[j] = gUnknown_080D8A64[0][j];
+        unk48->unk24[j] = gUnknown_080D8A7C[0][j];
     }
 
     unk594->callback = sub_804DFB0;
@@ -578,14 +582,17 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__CreateTrueArea53Boss.inc", void C
     // Rockets
     for (i = 0; i < 3; i++) {
         // _0804D1F0
-        s = &unk98->unk10[i].spr20;
+        TA53_unkA8 *unk10 = &unk98->unk10[i];
+        TA53_RocketExhaust *exhaust;
+        s = &unk10->spr20;
 
-        unk98->unk10[i].unk4 = 0;
-        unk98->unk10[i].unkA = 0;
-        unk98->unk10[i].unkE = 0;
-        unk98->unk10[i].unk10 = 0;
-        unk98->unk10[i].pos14.x = 0;
-        unk98->unk10[i].pos14.y = 0;
+        unk10->unk4 = 0;
+        unk10->unkA = 0;
+        unk10->unkE = 0;
+        unk10->unk10 = 0;
+        unk10->pos14.x = 0;
+        unk10->pos14.y = 0;
+
         s->x = 0;
         s->y = 0;
         s->graphics.dest = VramMalloc(16);
@@ -602,19 +609,20 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__CreateTrueArea53Boss.inc", void C
         s->hitboxes[0].index = HITBOX_STATE_INACTIVE;
         s->frameFlags = SPRITE_FLAG(PRIORITY, 2);
 
-        unk98->unk10[i].exhaust.callback = sub_804DD9C;
+        exhaust = &unk10->exhaust;
+        exhaust->callback = sub_804DD9C;
 
         // Rocket Exhaust Clouds
         for (j = 0; j < 5; j++) {
             // _0804D25C
-            TA53_RocketExhaust *exhaust = &unk98->unk10[i].exhaust;
+            s = &exhaust->s[j];
+
             exhaust->unk4[j] = 0;
             exhaust->unkA[j][0] = 0;
             exhaust->unkA[j][1] = 0;
             exhaust->pos[j].x = 0;
             exhaust->pos[j].y = 0;
 
-            s = &unk98->unk10[i].exhaust.s[j];
             s->x = 0;
             s->y = 0;
             s->graphics.dest = vram;
@@ -736,7 +744,6 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__CreateTrueArea53Boss.inc", void C
     s->hitboxes[0].index = HITBOX_STATE_INACTIVE;
     s->frameFlags = SPRITE_FLAG(PRIORITY, 1);
 }
-END_NONMATCH
 
 void TrueArea53BossMove(s32 dX, s32 dY)
 {
@@ -1208,7 +1215,7 @@ void sub_804E15C(struct TA53_unk48 *unk48)
     TA53Boss *boss = TASK_DATA(gCurTask);
     TA53_unk558 *unk558 = &boss->unk558;
     TA53_unk1C *unk1C = &boss->unk1C;
-    s32 sonicX, sonicY;
+    s32 qSonicX, qSonicY;
     u8 sp14, i;
 
     if (sub_8050030(unk48) != 0) {
@@ -1273,12 +1280,12 @@ void sub_804E15C(struct TA53_unk48 *unk48)
             }
             // _0804E30A
 
-            SuperSonicGetPos(&sonicX, &sonicY);
+            SuperSonicGetPos(&qSonicX, &qSonicY);
 
             r5 += unk48->unk38;
             r6 = CLAMP_SIN_PERIOD(r5);
 
-            r5 = (u16)sub_8004418(I(sonicY - r8), I(sonicX - sb));
+            r5 = (u16)sub_8004418(I(qSonicY - r8), I(qSonicX - sb));
 
             if ((r6 < (r5 + 0x10)) && (r6 > (r5 - 0x10))) {
                 sub_802BB54();
@@ -1311,9 +1318,9 @@ void sub_804E15C(struct TA53_unk48 *unk48)
         } else {
             u32 p0;
             // _0804E43C
-            sub_802C704(8, &sonicX, &sonicY);
+            sub_802C704(8, &qSonicX, &qSonicY);
 
-            r6 = sub_8004418(I(sonicY - r8), I(sonicX - sb));
+            r6 = sub_8004418(I(qSonicY - r8), I(qSonicX - sb));
             p0 = r5;
             p0 += unk48->unk38;
             if (sub_808558C(p0 & ONE_CYCLE, r6, 10) < 0) {
@@ -1851,30 +1858,24 @@ void sub_804F108(TA53_unk558 *unk558)
     }
 }
 
-// (81.57%) https://decomp.me/scratch/iqeu1
-NONMATCH("asm/non_matching/game/bosses/boss_9__sub_804F1EC.inc", void sub_804F1EC(struct TA53_unk558 *unk558))
+void sub_804F1EC(struct TA53_unk558 *unk558)
 {
     TA53Boss *boss = TASK_DATA(gCurTask);
     TA53_unk1C *unk1C = &boss->unk1C;
     TA53_unk48 *unk48 = &boss->unk48;
     TA53_unk98 *unk98 = &boss->unk98;
-    TA53_unkA8 *unkA8;
     Sprite *s = &unk558->s;
-    s32 qX, qY;
-    s32 qSonicX, qSonicY;
-    u16 index;
-    u8 i;
-    u32 hitbox;
-    s32 r7;
 
     if (boss->lives > 0) {
-        // _0804F222
+        s32 qX, qY;
+        s32 qSonicX, qSonicY;
+        s32 r7;
+        u16 index;
 
         if (--unk558->unk6 == 0) {
             unk558->callback = sub_8050DC8;
             m4aSongNumStop(SE_SUCTION);
         }
-        // _0804F23C
 
         r7 = unk558->unk8 + 2;
         if (r7 > 464) {
@@ -1912,7 +1913,7 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__sub_804F1EC.inc", void sub_804F1E
             s->prevVariant = -1;
             s->frameFlags = SPRITE_FLAG(PRIORITY, 2);
         } else {
-            // _0804F36C
+            u8 i;
             m4aSongNumStartOrContinue(SE_SUCTION);
 
             s->x = I(qX) - gCamera.x;
@@ -1921,23 +1922,22 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__sub_804F1EC.inc", void sub_804F1E
             DisplaySprite(s);
 
             for (i = 0; i < 3; i++) {
-                unkA8 = &unk98->unk10[i];
+                TA53_unkA8 *unkA8 = &unk98->unk10[i];
 
-                if (unkA8->unk4 & 0x1) {
-                    // TODO: This is a range-comparison, remove '<< 16'!
-                    s32 res = (sub_8004418(I(unkA8->pos14.y - qY), I(unkA8->pos14.x - qX)) - 301) << 16;
-                    if (((unsigned)res <= 422 << 16) || (unkA8->unk6 > 0)) {
-                        s32 unk1C = unkA8->unk1C + 0xA;
+                if (unkA8->unk4 & 1) {
+                    s16 res = (sub_8004418(I(unkA8->pos14.y - qY), I(unkA8->pos14.x - qX)));
+                    if ((res >= 301 && res <= 723) || (unkA8->unk6 > 0)) {
+                        r7 = unkA8->unk1C + 0xA;
                         unkA8->unk6 = 1;
-                        unkA8->unk1C = unk1C;
+                        unkA8->unk1C = r7;
 
-                        unkA8->pos14.x = sub_8085698(unkA8->pos14.x, +Q(22) + qX, (unk1C), 10, 2);
-                        unkA8->pos14.y = sub_8085698(unkA8->pos14.y, qY, (unk1C + 0xA0), 10, 2);
+                        unkA8->pos14.x = sub_8085698(unkA8->pos14.x, +Q(22) + qX, (r7), 10, 2);
+
+                        unkA8->pos14.y = sub_8085698(unkA8->pos14.y, qY, (r7 + 160), 10, 2);
 
                         unkA8->unkE = Div(unkA8->unkE * 90, 100);
                         unkA8->unk10 = Div(unkA8->unk10 * 90, 100);
                     }
-                    // _0804F430
 
                     if (sub_804EF68(&unkA8->spr20, I(unkA8->pos14.x), I(unkA8->pos14.y), s, I(qX) + 16, I(qY)) == TRUE) {
                         unkA8->unk4 = 0;
@@ -1947,7 +1947,6 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__sub_804F1EC.inc", void sub_804F1E
         }
     }
 }
-END_NONMATCH
 
 void sub_804F47C(struct TA53_unk558 *unk558)
 {
@@ -2190,12 +2189,9 @@ void sub_804F9BC(u32 qX, u32 qY, UNUSED s16 param2, UNUSED u32 sinIndex_)
     }
 }
 
-// NOTE/TODO: The logic of this does not match the game.
-//            The lowest loop is incorrect.
-// (61.23%) https://decomp.me/scratch/kecMc
-NONMATCH("asm/non_matching/game/bosses/boss_9__sub_804FAA4.inc", void sub_804FAA4(u32 qX, u32 qY, s16 param2, u32 sinIndex_))
+void sub_804FAA4(u32 qX, u32 qY, s16 param2, u32 sinIndex_)
 {
-    u8 array[0x8];
+    u8 array[8];
     u8 i;
 
     TA53Boss *boss = TASK_DATA(gCurTask);
@@ -2233,27 +2229,27 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__sub_804FAA4.inc", void sub_804FAA
     } else {
         sinIndex -= 0x46;
     }
-    sinIndex &= ONE_CYCLE;
+    sinIndex = CLAMP_SIN_PERIOD(sinIndex);
 
     // _0804FB28
     for (i = 0; i < 8; i++) {
         // _0804FB5E
         u16 arrIndex = array[i];
-        u16 newSinIndex;
+        u16 newSinIndex, index2;
         unk654->unkE[arrIndex] = 1;
         unk654->unk1E[arrIndex] = 255;
 
         if (i < 4) {
-            newSinIndex = sinIndex + i * 16;
+            newSinIndex = i * 16 + sinIndex;
+            index2 = i * 48;
         } else {
-            newSinIndex = sinIndex - i * 16;
+            newSinIndex = sinIndex - (i - 4) * 16;
+            index2 = (i - 4) * 48;
         }
 
-        unk654->unk2E[arrIndex][0] = (COS(newSinIndex) * 3) >> 6;
-        unk654->unk2E[arrIndex][1] = (SIN(newSinIndex) * 3) >> 6;
-
-        unk654->unk2E[arrIndex][0] += (COS(i * 128) * 3) >> 8;
-        unk654->unk2E[arrIndex][1] += (SIN(i * 128) * 3) >> 8;
+        newSinIndex = CLAMP_SIN_PERIOD(newSinIndex);
+        unk654->unk2E[arrIndex][0] = ((COS(newSinIndex)) * (0x280 - index2)) >> 0xE;
+        unk654->unk2E[arrIndex][1] = ((SIN(newSinIndex)) * (0x280 - index2)) >> 0xE;
 
         unk654->qPos70[arrIndex].x = qX;
         unk654->qPos70[arrIndex].y = qY;
@@ -2261,12 +2257,69 @@ NONMATCH("asm/non_matching/game/bosses/boss_9__sub_804FAA4.inc", void sub_804FAA
 
     m4aSongNumStart(SE_258);
 }
-END_NONMATCH
 
-// TODO: Implement
-// Code resembles sub_804F850 and sub_804FAA4
-NONMATCH("asm/non_matching/game/bosses/boss_9__sub_804FC10.inc", void sub_804FC10(u32 qX, u32 qY, s16 param2, u32 sinIndex_)) { }
-END_NONMATCH
+void sub_804FC10(u32 qX, u32 qY, s16 param2, u32 sinIndex_)
+{
+    u8 array[8];
+    u16 sinIndex = sinIndex_;
+
+    TA53Boss *boss = TASK_DATA(gCurTask);
+    TA53_unk654 *unk654 = &boss->unk654;
+
+    u8 r6;
+
+    for (r6 = 0; r6 < 2; r6++) {
+        u16 idx;
+        u8 *pArray = array;
+        bool32 r5 = FALSE;
+        u8 r3 = 0;
+        u8 r2, i;
+        for (r2 = 0; r2 < 16; r2++) {
+            if (unk654->unkE[r2] == 0) {
+                *pArray++ = r2;
+
+                r3++;
+
+                if (r3 == ARRAY_COUNT(array)) {
+                    break;
+                }
+            }
+        }
+
+        if (r3 == ARRAY_COUNT(array)) {
+            r5 = TRUE;
+        }
+
+        if (!r5) {
+            return;
+        }
+
+        if (array[ARRAY_COUNT(array) - 1] < 8) {
+            idx = sinIndex + 40;
+        } else {
+            idx = sinIndex - 40;
+        }
+        idx = CLAMP_SIN_PERIOD(idx);
+
+        for (i = 0; i < 8; i++) {
+            s32 val;
+            u16 arrIndex = array[i];
+
+            unk654->unkE[arrIndex] = 1;
+            unk654->unk1E[arrIndex] = 255;
+
+            val = i * 64;
+
+            unk654->unk2E[arrIndex][0] = ((COS(idx) * (1024 - val))) >> 14;
+            unk654->unk2E[arrIndex][1] = ((SIN(idx) * (1024 - val))) >> 14;
+
+            unk654->qPos70[arrIndex].x = qX;
+            unk654->qPos70[arrIndex].y = qY;
+        }
+    }
+
+    m4aSongNumStart(SE_WATERFALL_SURFACE_HIT);
+}
 
 void sub_804FD58(u32 qX, u32 qY, UNUSED s16 param2, UNUSED u32 sinIndex_)
 {

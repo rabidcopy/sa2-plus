@@ -140,11 +140,11 @@ static void Task_ActiveMain(void)
 
 static void ActivatePlayerGrab(Sprite_FlyingHandle *flyingHandle)
 {
-    gPlayer.moveState |= MOVESTATE_400000;
+    gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
     gPlayer.charState = CHARSTATE_HANGING;
-    gPlayer.speedGroundX = 0;
-    gPlayer.speedAirX = 0;
-    gPlayer.speedAirY = 0;
+    gPlayer.qSpeedGround = 0;
+    gPlayer.qSpeedAirX = 0;
+    gPlayer.qSpeedAirY = 0;
     sub_807F7D0(flyingHandle);
 
     flyingHandle->unk60 = 1;
@@ -160,7 +160,7 @@ static void ActivatePlayerGrab(Sprite_FlyingHandle *flyingHandle)
 
 static void sub_807F484(Sprite_FlyingHandle *flyingHandle)
 {
-    gPlayer.moveState &= ~MOVESTATE_400000;
+    gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
     Player_TransitionCancelFlyingAndBoost(&gPlayer);
     sub_8023B5C(&gPlayer, 14);
 
@@ -168,9 +168,9 @@ static void sub_807F484(Sprite_FlyingHandle *flyingHandle)
     gPlayer.spriteOffsetY = 14;
     gPlayer.moveState &= ~MOVESTATE_4;
     gPlayer.transition = PLTRANS_INIT_JUMP;
-    gPlayer.speedGroundX = 0;
-    gPlayer.speedAirX = 0;
-    gPlayer.speedAirY = 0;
+    gPlayer.qSpeedGround = 0;
+    gPlayer.qSpeedAirX = 0;
+    gPlayer.qSpeedAirY = 0;
     flyingHandle->unk69 = 30;
     m4aSongNumStop(SE_291);
     gCurTask->main = sub_807F6F0;
@@ -284,7 +284,7 @@ static void sub_807F784(UNUSED Sprite_FlyingHandle *flyingHandle) { gCurTask->ma
 
 static void sub_807F798(Sprite_FlyingHandle *flyingHandle)
 {
-    gPlayer.moveState &= ~MOVESTATE_400000;
+    gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
     flyingHandle->unk69 = 30;
     m4aSongNumStop(SE_291);
     gCurTask->main = sub_807F6F0;

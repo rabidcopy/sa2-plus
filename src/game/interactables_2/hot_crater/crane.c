@@ -212,7 +212,7 @@ static void Task_8073B1C(void)
     Sprite_HCCrane *crane = TASK_DATA(gCurTask);
 
     if ((gPlayer.moveState & MOVESTATE_DEAD) || (gPlayer.timerInvulnerability == 120)) {
-        gPlayer.moveState &= ~MOVESTATE_400000;
+        gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
         crane->unk1B8.unk0 = 0;
     }
 
@@ -245,7 +245,7 @@ static void Task_8073BD4(void)
     Sprite_HCCrane *crane = TASK_DATA(gCurTask);
 
     if ((gPlayer.moveState & MOVESTATE_DEAD) || (gPlayer.timerInvulnerability == 120)) {
-        gPlayer.moveState &= ~MOVESTATE_400000;
+        gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
         crane->unk1B8.unk0 = 0;
     }
 
@@ -496,12 +496,12 @@ static void sub_8074088(Sprite_HCCrane *crane)
 
     gPlayer.spriteOffsetX = 6;
     gPlayer.spriteOffsetY = 9;
-    gPlayer.moveState |= MOVESTATE_400000;
+    gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
     gPlayer.charState = CHARSTATE_HANGING;
 
     sub_8074550(crane);
     crane->unk1B8.unk0 = 1;
-    crane->unk1B8.accelY = (u16)gPlayer.speedAirY * 2;
+    crane->unk1B8.accelY = (u16)gPlayer.qSpeedAirY * 2;
 
     CLAMP_INLINE(crane->unk1B8.accelY, Q_8_8(7.5), Q_8_8(12));
 
@@ -509,9 +509,9 @@ static void sub_8074088(Sprite_HCCrane *crane)
     crane->unk1B8.unk6 = v;
     crane->unk1B8.unk8 = 0;
 
-    gPlayer.speedGroundX = 0;
-    gPlayer.speedAirX = 0;
-    gPlayer.speedAirY = 0;
+    gPlayer.qSpeedGround = 0;
+    gPlayer.qSpeedAirX = 0;
+    gPlayer.qSpeedAirY = 0;
 
     gCurTask->main = Task_8073B1C;
 }
@@ -519,11 +519,11 @@ static void sub_8074088(Sprite_HCCrane *crane)
 static void sub_8074138(Sprite_HCCrane *crane)
 {
     if (!(gPlayer.moveState & MOVESTATE_DEAD) && crane->unk1B8.unk0 != 0) {
-        gPlayer.moveState &= ~MOVESTATE_400000;
+        gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
         gPlayer.charState = CHARSTATE_SPRING_B;
         gPlayer.transition = PLTRANS_PT7;
-        gPlayer.speedAirX = 0;
-        gPlayer.speedAirY = -crane->unk1B8.accelY;
+        gPlayer.qSpeedAirX = 0;
+        gPlayer.qSpeedAirY = -crane->unk1B8.accelY;
         crane->unk1B8.unk0 = 0;
     }
 
@@ -625,7 +625,7 @@ static void sub_80742A8(Sprite_HCCrane *crane)
 static bool32 sub_807432C(Sprite_HCCrane *crane)
 {
     if (!(gPlayer.moveState & MOVESTATE_DEAD)) {
-        if ((gPlayer.moveState & MOVESTATE_IN_AIR) && (gPlayer.speedAirY > 0)) {
+        if ((gPlayer.moveState & MOVESTATE_IN_AIR) && (gPlayer.qSpeedAirY > 0)) {
             s16 screenX = I(crane->cs[7].screenX);
             s16 screenY = I(crane->cs[7].screenY);
             s16 playerX = I(gPlayer.qWorldX) - gCamera.x;

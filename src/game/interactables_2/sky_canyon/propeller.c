@@ -167,10 +167,10 @@ static void sub_807B74C(Sprite_Propeller *propeller)
 {
     propeller->unk48 = 0;
     propeller->unk46 = SIN_24_8(0) * 16;
-    propeller->unk44 = gPlayer.speedAirX;
-    if (gPlayer.speedAirX >= 1) {
+    propeller->unk44 = gPlayer.qSpeedAirX;
+    if (gPlayer.qSpeedAirX >= 1) {
         propeller->unk44 = 32;
-    } else if (gPlayer.speedAirX < 0) {
+    } else if (gPlayer.qSpeedAirX < 0) {
         propeller->unk44 = -32;
     } else {
         propeller->unk44 = gPlayer.moveState & MOVESTATE_FACING_LEFT ? -32 : 32;
@@ -180,21 +180,21 @@ static void sub_807B74C(Sprite_Propeller *propeller)
 
 static void sub_807B7BC(Sprite_Propeller *propeller)
 {
-    gPlayer.moveState &= ~MOVESTATE_400000;
-    gPlayer.transition = PLTRANS_PT5;
+    gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
+    gPlayer.transition = PLTRANS_UNCURL;
 
     if (propeller->unk48 <= (PROPELLER_HITBOX_HEIGHT / 2) || propeller->unk48 >= 192) {
         propeller->unk48 += (PROPELLER_HITBOX_HEIGHT / 2);
         propeller->unk48 = PROPELLER_HITBOX_HEIGHT - propeller->unk48;
-        gPlayer.speedAirY = -(propeller->unk48 * 1024) >> 7;
-        if (gPlayer.speedAirY >= 1) {
-            gPlayer.speedAirY = 0;
+        gPlayer.qSpeedAirY = -(propeller->unk48 * 1024) >> 7;
+        if (gPlayer.qSpeedAirY >= 1) {
+            gPlayer.qSpeedAirY = 0;
         }
     } else {
-        gPlayer.speedAirY = 0;
+        gPlayer.qSpeedAirY = 0;
     }
 
-    gPlayer.speedAirX = propeller->unk44 >> 1;
+    gPlayer.qSpeedAirX = propeller->unk44 >> 1;
     gCurTask->main = Task_GiantPropellerIdle;
 }
 
@@ -248,7 +248,7 @@ static void sub_807B8FC(Sprite_Propeller *propeller)
     sub_8023B5C(&gPlayer, 14);
     gPlayer.spriteOffsetX = 6;
     gPlayer.spriteOffsetY = 14;
-    gPlayer.moveState |= MOVESTATE_400000;
+    gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
     gPlayer.charState = CHARSTATE_IN_WHIRLWIND;
 }
 

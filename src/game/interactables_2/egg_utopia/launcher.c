@@ -120,7 +120,7 @@ void CreateEntity_Launcher(MapEntity *me, u16 spriteRegionX, u16 spriteRegionY, 
 
     {
         s32 *xs, *ys;
-        int i = 0;
+        s32 i = 0;
 #ifndef NON_MATCHING
         register void *s2 asm("r4") = &launcher->s;
 #endif
@@ -199,11 +199,11 @@ static void Task_807DBF0(void)
             if (gPlayer.frameInput & gPlayerControls.jump) {
                 gPlayer.transition = PLTRANS_INIT_JUMP;
 
-                gPlayer.moveState &= ~MOVESTATE_400000;
+                gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                 launcher->unk48 = FALSE;
             }
         } else {
-            gPlayer.moveState &= ~MOVESTATE_400000;
+            gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
             launcher->unk48 = FALSE;
         }
     }
@@ -215,11 +215,11 @@ static void sub_807DC80(Sprite_EggUtopia_Launcher *launcher)
 {
     m4aSongNumStart(SE_286);
 
-    gPlayer.moveState |= MOVESTATE_400000;
+    gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
     gPlayer.charState = CHARSTATE_LAUNCHER_IN_CART;
-    gPlayer.speedGroundX = 0;
-    gPlayer.speedAirX = 0;
-    gPlayer.speedAirY = 0;
+    gPlayer.qSpeedGround = 0;
+    gPlayer.qSpeedAirX = 0;
+    gPlayer.qSpeedAirY = 0;
 
     Player_TransitionCancelFlyingAndBoost(&gPlayer);
     sub_8023B5C(&gPlayer, 14);
@@ -242,21 +242,21 @@ static void sub_807DC80(Sprite_EggUtopia_Launcher *launcher)
 static void sub_807DD04(Sprite_EggUtopia_Launcher *launcher)
 {
     if (PLAYER_IS_ALIVE && launcher->unk48) {
-        gPlayer.moveState &= ~MOVESTATE_400000;
+        gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
         gPlayer.charState = CHARSTATE_LAUNCHER_IN_AIR;
         gPlayer.transition = PLTRANS_PT7;
 
         switch (launcher->kind) {
             case LAUNCHER_KIND(LAUN_DIR_LEFT, LAUN_GRAVITY_DOWN):
             case LAUNCHER_KIND(LAUN_DIR_LEFT, LAUN_GRAVITY_UP): {
-                gPlayer.speedAirX = -Q(15.0);
-                gPlayer.speedAirY = -Q(3.0);
+                gPlayer.qSpeedAirX = -Q(15.0);
+                gPlayer.qSpeedAirY = -Q(3.0);
             } break;
 
             case LAUNCHER_KIND(LAUN_DIR_RIGHT, LAUN_GRAVITY_DOWN):
             case LAUNCHER_KIND(LAUN_DIR_RIGHT, LAUN_GRAVITY_UP): {
-                gPlayer.speedAirX = +Q(15.0);
-                gPlayer.speedAirY = -Q(3.0);
+                gPlayer.qSpeedAirX = +Q(15.0);
+                gPlayer.qSpeedAirY = -Q(3.0);
             } break;
         }
 

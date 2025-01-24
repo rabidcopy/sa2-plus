@@ -114,9 +114,9 @@ static void sub_8072BB8(void)
     } else {
         s16 x, playerX;
         sub_80731D4();
-        gPlayer.qWorldX += gPlayer.speedAirX;
-        gPlayer.qWorldY += gPlayer.speedAirY;
-        gPlayer.speedGroundX = ClampRailSpeed(gPlayer.speedGroundX);
+        gPlayer.qWorldX += gPlayer.qSpeedAirX;
+        gPlayer.qWorldY += gPlayer.qSpeedAirY;
+        gPlayer.qSpeedGround = ClampRailSpeed(gPlayer.qSpeedGround);
 
         x = hookRail->x - gCamera.x;
         playerX = I(gPlayer.qWorldX) - gCamera.x;
@@ -149,11 +149,11 @@ static void sub_8072C90(void)
         sub_8073034(hookRail);
     } else {
         sub_80731D4();
-        hookRail->grindDistance += gPlayer.speedAirX;
+        hookRail->grindDistance += gPlayer.qSpeedAirX;
         gPlayer.qWorldX = hookRail->joinedX + hookRail->grindDistance;
         // This sets the hook rail angle. It's always 1/2
         gPlayer.qWorldY = hookRail->joinedY + (ABS(hookRail->grindDistance) >> 1);
-        gPlayer.speedGroundX = ClampRailSpeed(gPlayer.speedGroundX + 21);
+        gPlayer.qSpeedGround = ClampRailSpeed(gPlayer.qSpeedGround + 21);
     }
 }
 
@@ -173,9 +173,9 @@ static void sub_8072D40(void)
         sub_8073148(hookRail);
     } else {
         sub_80731D4();
-        gPlayer.qWorldX += gPlayer.speedAirX;
-        gPlayer.qWorldY += gPlayer.speedAirY;
-        gPlayer.speedGroundX = ClampRailSpeed(gPlayer.speedGroundX);
+        gPlayer.qWorldX += gPlayer.qSpeedAirX;
+        gPlayer.qWorldY += gPlayer.qSpeedAirY;
+        gPlayer.qSpeedGround = ClampRailSpeed(gPlayer.qSpeedGround);
 
         if (IsPlayerTouching(hookRail) == PLAYER_TOUCH_DIRECTION_NONE) {
             sub_80730F0(hookRail);
@@ -185,7 +185,7 @@ static void sub_8072D40(void)
 
 static void sub_8072DCC(Sprite_HookRail *hookRail)
 {
-    gPlayer.moveState |= MOVESTATE_400000;
+    gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
     gPlayer.charState = CHARSTATE_HANGING;
     Player_TransitionCancelFlyingAndBoost(&gPlayer);
     sub_8023B5C(&gPlayer, 14);
@@ -196,17 +196,17 @@ static void sub_8072DCC(Sprite_HookRail *hookRail)
     hookRail->grindDistance = 0;
     if (hookRail->triggerType == 0) {
         gPlayer.moveState |= MOVESTATE_FACING_LEFT;
-        gPlayer.speedGroundX = gPlayer.speedAirX;
+        gPlayer.qSpeedGround = gPlayer.qSpeedAirX;
 
-        if (gPlayer.speedGroundX > -Q(1)) {
-            gPlayer.speedGroundX = -Q(1);
+        if (gPlayer.qSpeedGround > -Q(1)) {
+            gPlayer.qSpeedGround = -Q(1);
         }
         gPlayer.rotation = 128;
     } else {
         gPlayer.moveState &= ~MOVESTATE_FACING_LEFT;
-        gPlayer.speedGroundX = gPlayer.speedAirX;
-        if (gPlayer.speedGroundX < Q(1)) {
-            gPlayer.speedGroundX = Q(1);
+        gPlayer.qSpeedGround = gPlayer.qSpeedAirX;
+        if (gPlayer.qSpeedGround < Q(1)) {
+            gPlayer.qSpeedGround = Q(1);
         }
 
         gPlayer.rotation = 0;
@@ -311,7 +311,7 @@ static void sub_8073068(UNUSED Sprite_HookRail *hookRail)
 
 static void sub_8073088(UNUSED Sprite_HookRail *hookRail)
 {
-    gPlayer.moveState &= ~MOVESTATE_400000;
+    gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
     m4aSongNumStop(SE_283);
     gCurTask->main = sub_8073320;
 }
@@ -330,9 +330,9 @@ static void sub_80730BC(Sprite_HookRail *hookRail)
 
 static void sub_80730F0(UNUSED Sprite_HookRail *hookRail)
 {
-    gPlayer.moveState &= ~MOVESTATE_400000;
+    gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
     gPlayer.charState = CHARSTATE_FALLING_VULNERABLE_B;
-    gPlayer.transition = PLTRANS_PT5;
+    gPlayer.transition = PLTRANS_UNCURL;
     if (gPlayer.rotation == 128) {
         gPlayer.rotation = 109;
     } else {
@@ -352,7 +352,7 @@ static void sub_8073148(UNUSED Sprite_HookRail *hookRail)
 
 static void sub_8073168(UNUSED Sprite_HookRail *hookRail)
 {
-    gPlayer.moveState &= ~MOVESTATE_400000;
+    gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
     m4aSongNumStop(SE_283);
     gCurTask->main = sub_8072F8C;
 }
@@ -378,13 +378,13 @@ static s16 ClampRailSpeed(s16 groundSpeedX)
 
 static void sub_80731D4(void)
 {
-    gPlayer.speedAirX = I(gPlayer.speedGroundX * COS_24_8(gPlayer.rotation * 4));
-    gPlayer.speedAirY = I(gPlayer.speedGroundX * SIN_24_8(gPlayer.rotation * 4));
+    gPlayer.qSpeedAirX = I(gPlayer.qSpeedGround * COS_24_8(gPlayer.rotation * 4));
+    gPlayer.qSpeedAirY = I(gPlayer.qSpeedGround * SIN_24_8(gPlayer.rotation * 4));
 }
 
 static void sub_807321C(void)
 {
-    gPlayer.moveState &= ~MOVESTATE_400000;
+    gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
     gPlayer.transition = PLTRANS_INIT_JUMP;
 }
 

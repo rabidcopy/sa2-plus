@@ -9,6 +9,7 @@
 
 // (88.05%) https://decomp.me/scratch/ekyaq
 // (91.40%) https://decomp.me/scratch/vapLV
+// (94.83%) https://decomp.me/scratch/Naixp (more accurate)
 NONMATCH("asm/non_matching/game/stage/background/StageBgUpdate_Zone2Acts12.inc", void StageBgUpdate_Zone2Acts12(s32 cameraX, s32 cameraY))
 {
     s16 something;
@@ -21,7 +22,7 @@ NONMATCH("asm/non_matching/game/stage/background/StageBgUpdate_Zone2Acts12.inc",
         if (gBgScrollRegs[3][0] == 0) {
             gBgScrollRegs[3][0] = cameraX;
         }
-        gBgScrollRegs[3][0] += (gPlayer.speedGroundX >> 8);
+        gBgScrollRegs[3][0] += (gPlayer.qSpeedGround >> 8);
         cameraX = gBgScrollRegs[3][0];
     }
 

@@ -45,13 +45,13 @@ void Task_8060D34(void)
                 gPlayer.transition = PLTRANS_CORKSCREW;
 
                 idx = ((((I(gPlayer.qWorldX) - x) * 930) >> 8) + 256) & ONE_CYCLE;
-                gPlayer.qWorldX += gPlayer.speedGroundX;
+                gPlayer.qWorldX += gPlayer.qSpeedGround;
                 y24_8 = Q(y);
                 gPlayer.qWorldY = SIN_24_8(idx) * 24 + y24_8 - Q(28);
 
-                gPlayer.speedAirY = 0;
+                gPlayer.qSpeedAirY = 0;
                 gCurTask->main = sub_8060ED0;
-            } else if ((x >= I(gPlayer.qWorldX)) && gPlayer.speedGroundX > Q_8_8(4) && !(gPlayer.moveState & MOVESTATE_IN_AIR)
+            } else if ((x >= I(gPlayer.qWorldX)) && gPlayer.qSpeedGround > Q_8_8(4) && !(gPlayer.moveState & MOVESTATE_IN_AIR)
                        && !(gPlayer.frameInput & gPlayerControls.jump)) {
                 corkscrew->base.id |= 1;
             } else {
@@ -92,7 +92,7 @@ void sub_8060ED0(void)
 
     if (I(player->qWorldX) - x > 0x230) {
         if (player->moveState & MOVESTATE_4) {
-            player->transition = PLTRANS_PT2;
+            player->transition = PLTRANS_CORKSCREW_END;
         } else {
             player->transition = PLTRANS_TOUCH_GROUND;
         }
@@ -103,21 +103,21 @@ void sub_8060ED0(void)
     idx = I((I(player->qWorldX) - x) * 930);
     idx = (idx + 256) & ONE_CYCLE;
 
-    player->qWorldX += player->speedGroundX;
+    player->qWorldX += player->qSpeedGround;
     y24_8 = Q(y);
     player->qWorldY = SIN_24_8(idx) * 24 + y24_8 - Q(28);
-    player->speedAirY = 0;
+    player->qSpeedAirY = 0;
 
-    if (player->speedGroundX < corkscrew->unk10) {
+    if (player->qSpeedGround < corkscrew->unk10) {
         player->charState = CHARSTATE_CURLED_IN_AIR;
-        player->speedAirX = player->speedGroundX;
-        player->transition = PLTRANS_PT5;
+        player->qSpeedAirX = player->qSpeedGround;
+        player->transition = PLTRANS_UNCURL;
         gCurTask->main = Task_8060D34;
     } else if (player->frameInput & gPlayerControls.jump) {
         player->charState = CHARSTATE_CURLED_IN_AIR;
-        player->speedAirX = player->speedGroundX;
-        player->speedAirY = -Q(4.875);
-        player->transition = PLTRANS_PT5;
+        player->qSpeedAirX = player->qSpeedGround;
+        player->qSpeedAirY = -Q(4.875);
+        player->transition = PLTRANS_UNCURL;
         gCurTask->main = Task_8060D34;
     } else if (!(player->moveState & MOVESTATE_4) && player->frameInput & DPAD_DOWN) {
         player->charState = CHARSTATE_SPIN_ATTACK;
@@ -155,13 +155,13 @@ void sub_8061088(void)
                 gPlayer.transition = PLTRANS_CORKSCREW;
 
                 idx = ((((I(gPlayer.qWorldX) - x) * 930) >> 8) + 256) & ONE_CYCLE;
-                gPlayer.qWorldX += gPlayer.speedGroundX;
+                gPlayer.qWorldX += gPlayer.qSpeedGround;
                 y24_8 = Q(y);
                 gPlayer.qWorldY = SIN_24_8(idx) * 24 + y24_8 - Q(28);
 
-                gPlayer.speedAirY = 0;
+                gPlayer.qSpeedAirY = 0;
                 gCurTask->main = sub_8061228;
-            } else if ((x <= I(gPlayer.qWorldX)) && gPlayer.speedGroundX < -Q_8_8(4) && !(gPlayer.moveState & MOVESTATE_IN_AIR)
+            } else if ((x <= I(gPlayer.qWorldX)) && gPlayer.qSpeedGround < -Q_8_8(4) && !(gPlayer.moveState & MOVESTATE_IN_AIR)
                        && !(gPlayer.frameInput & gPlayerControls.jump)) {
                 corkscrew->base.id |= 1;
             } else {
@@ -202,7 +202,7 @@ void sub_8061228(void)
 
     if (I(player->qWorldX) - x < -0x230) {
         if (player->moveState & MOVESTATE_4) {
-            player->transition = PLTRANS_PT2;
+            player->transition = PLTRANS_CORKSCREW_END;
         } else {
             player->transition = PLTRANS_TOUCH_GROUND;
         }
@@ -213,21 +213,21 @@ void sub_8061228(void)
     idx = I((I(player->qWorldX) - x) * 930);
     idx = (idx + 256) & ONE_CYCLE;
 
-    player->qWorldX += player->speedGroundX;
+    player->qWorldX += player->qSpeedGround;
     y24_8 = Q(y);
     player->qWorldY = SIN_24_8(idx) * 24 + y24_8 - Q(28);
-    player->speedAirY = 0;
+    player->qSpeedAirY = 0;
 
-    if (player->speedGroundX > corkscrew->unk10) {
+    if (player->qSpeedGround > corkscrew->unk10) {
         player->charState = CHARSTATE_CURLED_IN_AIR;
-        player->speedAirX = player->speedGroundX;
-        player->transition = PLTRANS_PT5;
+        player->qSpeedAirX = player->qSpeedGround;
+        player->transition = PLTRANS_UNCURL;
         gCurTask->main = sub_8061088;
     } else if (player->frameInput & gPlayerControls.jump) {
         player->charState = CHARSTATE_CURLED_IN_AIR;
-        player->speedAirX = player->speedGroundX;
-        player->speedAirY = -Q(4.875);
-        player->transition = PLTRANS_PT5;
+        player->qSpeedAirX = player->qSpeedGround;
+        player->qSpeedAirY = -Q(4.875);
+        player->transition = PLTRANS_UNCURL;
         gCurTask->main = sub_8061088;
     } else if (!(player->moveState & MOVESTATE_4) && player->frameInput & DPAD_DOWN) {
         player->charState = CHARSTATE_SPIN_ATTACK;
@@ -277,9 +277,9 @@ UNUSED s32 sub_806148C(s32 x, s32 y)
     s32 y24_8;
     s32 idx = ((((I(gPlayer.qWorldX) - x) * 930) >> 8) + 256) & ONE_CYCLE;
 
-    gPlayer.qWorldX += gPlayer.speedGroundX;
+    gPlayer.qWorldX += gPlayer.qSpeedGround;
     y24_8 = Q(y);
     gPlayer.qWorldY = SIN_24_8(idx) * 24 + y24_8 - Q(28);
-    gPlayer.speedAirY = 0;
+    gPlayer.qSpeedAirY = 0;
     return idx;
 }

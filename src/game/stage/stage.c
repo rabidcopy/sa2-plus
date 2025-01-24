@@ -31,6 +31,8 @@
 #include "constants/songs.h"
 #include "constants/zones.h"
 
+#include "game/multiplayer/multiplayer_event_mgr.h"
+
 struct Task *gGameStageTask = NULL;
 
 void Task_GameStage(void);
@@ -46,10 +48,6 @@ void StageInit_CollectRings(void);
 void SetupStageIntro(void);
 
 void CreateStageWaterTask(u32, u32, u32);
-
-void sub_8019120(void);
-
-void sub_80191A4(void);
 
 void StageInit_Zone1Act1(void);
 void StageInit_Zone3Act1(void);
@@ -225,7 +223,7 @@ void CreateGameStage(void)
         InitCamera(0);
         StageInit_CollectRings();
         CreateCollectRingsTimeDisplay();
-        gPlayer.moveState &= ~(MOVESTATE_400000 | MOVESTATE_IGNORE_INPUT);
+        gPlayer.moveState &= ~(MOVESTATE_IA_OVERRIDE | MOVESTATE_IGNORE_INPUT);
         gStageFlags &= ~STAGE_FLAG__ACT_START;
     }
 
@@ -253,8 +251,8 @@ void CreateGameStage(void)
     gUnknown_03005398 = 0x80;
 
     if (IS_MULTI_PLAYER) {
-        sub_80191A4();
-        sub_8019120();
+        CreateMultiplayerReceiveEventMgr();
+        CreateMultiplayerSendEventMgr();
 
         gRandomItemBox = 0;
 
@@ -389,10 +387,10 @@ void Task_GameStage(void)
 
             gPlayer.itemEffect = 0;
 
-            if (gPlayer.moveState & MOVESTATE_40) {
-                gPlayer.speedAirY = -Q(2.625);
+            if (gPlayer.moveState & MOVESTATE_IN_WATER) {
+                gPlayer.qSpeedAirY = -Q(2.625);
             } else {
-                gPlayer.speedAirY = -Q(4.875);
+                gPlayer.qSpeedAirY = -Q(4.875);
             }
 
             if (gCurrentLevel == LEVEL_INDEX(ZONE_3, ACT_BOSS)) {
@@ -419,10 +417,10 @@ void Task_GameStage(void)
 
             gPlayer.itemEffect = 0;
 
-            if (gPlayer.moveState & MOVESTATE_40) {
-                gPlayer.speedAirY = -Q(2.625);
+            if (gPlayer.moveState & MOVESTATE_IN_WATER) {
+                gPlayer.qSpeedAirY = -Q(2.625);
             } else {
-                gPlayer.speedAirY = -Q(4.875);
+                gPlayer.qSpeedAirY = -Q(4.875);
             }
             gPlayer.moveState |= MOVESTATE_DEAD;
             m4aSongNumStart(SE_TIME_UP);
@@ -468,7 +466,7 @@ static inline void StageInit_SetMusic_inline(u16 level)
     if (gGameMode != GAME_MODE_MULTI_PLAYER_COLLECT_RINGS) {
         if (gSelectedCharacter == CHARACTER_SONIC && gLoadedSaveGame->unlockedLevels[CHARACTER_SONIC] <= gCurrentLevel
             && gCurrentLevel == LEVEL_INDEX(ZONE_5, ACT_BOSS)) {
-            gMusicManagerState.unk1 = 0x1E;
+            gMusicManagerState.unk1 = 0x10 | 0xE;
         } else {
             m4aSongNumStart(gLevelSongs[level]);
         }

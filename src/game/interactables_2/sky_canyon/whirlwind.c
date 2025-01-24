@@ -155,12 +155,12 @@ void CreateEntity_Whirlwind(MapEntity *me, u16 spriteRegionX, u16 spriteRegionY,
 // (fake-matched) https://decomp.me/scratch/Jl2c3
 void sub_807C9C0(Sprite_IA86 *ia086)
 {
-    gPlayer.moveState |= MOVESTATE_400000;
+    gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
     gPlayer.charState = CHARSTATE_IN_WHIRLWIND;
 
     ia086->unk182 = 64;
     ia086->unk184 = Q(0.5);
-    ia086->unk186 = gPlayer.speedAirY;
+    ia086->unk186 = gPlayer.qSpeedAirY;
     ia086->unk180 = 0;
     ia086->unk188 = Q(ia086->unk228.centerX) - gPlayer.qWorldX;
     ia086->unk18C = Q(ia086->unk228.centerY) - gPlayer.qWorldY;
@@ -179,7 +179,7 @@ void sub_807C9C0(Sprite_IA86 *ia086)
     register s32 r1 asm("r1");
     s16 *p184;
 
-    p1->moveState |= MOVESTATE_400000;
+    p1->moveState |= MOVESTATE_IA_OVERRIDE;
     p1->charState = CHARSTATE_IN_WHIRLWIND;
 
     // Must be some debug stuff happening here
@@ -197,7 +197,7 @@ void sub_807C9C0(Sprite_IA86 *ia086)
     zero = 0;
     *p184 = Q(0.5);
 
-    ia086->unk186 = p->speedAirY;
+    ia086->unk186 = p->qSpeedAirY;
 
     r0 = 0x180;
     (*(s16 *)((void *)ia086 + r0)) = zero;
@@ -622,10 +622,10 @@ void Task_807D268(void)
 
 void sub_807D2BC(Sprite_IA86 *unused)
 {
-    gPlayer.moveState &= ~MOVESTATE_400000;
+    gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
     gPlayer.transition = PLTRANS_PT7;
-    gPlayer.speedAirX = 0;
-    gPlayer.speedAirY = -Q(8.0);
+    gPlayer.qSpeedAirX = 0;
+    gPlayer.qSpeedAirY = -Q(8.0);
 
     gCurTask->main = Task_807D06C;
 }

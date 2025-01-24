@@ -16,9 +16,9 @@
 #include "game/multiplayer/mp_player.h"
 #include "game/stage/item_tasks.h"
 
-#include "game/multiplayer/player_unk_1.h"
-#include "game/unknown_effect.h"
-#include "game/multiplayer/player_unk_2.h"
+#include "game/multiplayer/multiplayer_event_mgr.h"
+#include "game/multiplayer/mp_attack_1_effect.h"
+#include "game/multiplayer/mp_attack_2_effect.h"
 #include "game/multiplayer/multipak_connection.h"
 
 #include "constants/animations.h"
@@ -27,7 +27,7 @@
 #include "constants/songs.h"
 
 u32 unused_3005838 = 0;
-u8 gUnknown_0300583C = 0;
+bool8 gShouldSpawnMPAttack2Effect = FALSE;
 
 void Task_CreateMultiplayerPlayer(void);
 void TaskDestructor_MultiplayerPlayer(struct Task *);
@@ -209,10 +209,10 @@ NONMATCH("asm/non_matching/game/multiplayer/mp_player__Task_CreateMultiplayerPla
                     MultiplayerPlayer *mpp2 = TASK_DATA(gMultiplayerPlayerTasks[mpp->unk64]);
                     if (SIO_MULTI_CNT->id == mpp2->unk64) {
                         mpp2->unk64 = SIO_MULTI_CNT->id;
-                        gPlayer.moveState &= ~MOVESTATE_8;
+                        gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
                         gPlayer.moveState &= ~MOVESTATE_20;
                         gPlayer.moveState &= ~MOVESTATE_4;
-                        gPlayer.moveState &= ~MOVESTATE_10;
+                        gPlayer.moveState &= ~MOVESTATE_FLIP_WITH_MOVE_DIR;
                         gPlayer.moveState |= MOVESTATE_IN_AIR;
                         gPlayer.moveState &= ~MOVESTATE_400;
                         gPlayer.moveState &= ~MOVESTATE_100;
@@ -225,10 +225,10 @@ NONMATCH("asm/non_matching/game/multiplayer/mp_player__Task_CreateMultiplayerPla
                         gPlayer.charState = CHARSTATE_WALK_A;
                         gPlayer.moveState |= MOVESTATE_800000;
                         gPlayer.callback = Player_TouchGround;
-                        gPlayer.moveState &= ~MOVESTATE_400000;
+                        gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                         mpp->unk5C &= ~4;
                         if (mpp2->unk5C & 4) {
-                            gPlayer.moveState &= ~MOVESTATE_400000;
+                            gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                             mpp2->unk5C &= ~4;
                         }
                     }
@@ -252,12 +252,12 @@ NONMATCH("asm/non_matching/game/multiplayer/mp_player__Task_CreateMultiplayerPla
 
                 if (mpp->unk54 & 4) {
                     if (mpp->unk5C & 4) {
-                        gPlayer.moveState &= ~MOVESTATE_400000;
+                        gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                         mpp->unk5C &= ~4;
                     }
 
-                    if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
-                        gPlayer.moveState &= ~MOVESTATE_8;
+                    if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
+                        gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
                         gPlayer.moveState |= MOVESTATE_IN_AIR;
                     }
                 }
@@ -340,13 +340,14 @@ NONMATCH("asm/non_matching/game/multiplayer/mp_player__Task_CreateMultiplayerPla
         }
 
         if (someBool) {
-            sub_8019224()->unk0 = 7;
+            ((RoomEvent *)CreateRoomEvent())->type = 7;
         }
     }
 
     if (!(gStageFlags & 1) && !(mpp->unk54 & 0x80000004)) {
         if (!(gPlayer.itemEffect & 0x80)) {
-            if (!(mpp->unk5C & 1) && (gPlayer.timerInvulnerability == 0) && !(gPlayer.moveState & (MOVESTATE_400000 | MOVESTATE_DEAD))) {
+            if (!(mpp->unk5C & 1) && (gPlayer.timerInvulnerability == 0)
+                && !(gPlayer.moveState & (MOVESTATE_IA_OVERRIDE | MOVESTATE_DEAD))) {
                 if (gGameMode != GAME_MODE_MULTI_PLAYER_COLLECT_RINGS) {
                     if (mpp->unk56 != SIO_MULTI_CNT->id) {
                         switch (gMultiplayerCharacters[mpp->unk56]) {
@@ -381,23 +382,23 @@ NONMATCH("asm/non_matching/game/multiplayer/mp_player__Task_CreateMultiplayerPla
                     && gMultiplayerCharacters[mpp->unk56] == CHARACTER_KNUCKLES && mpp->unk5C & 4) {
                     mpp->unk5C &= ~0x6;
                     if (!(gPlayer.itemEffect & PLAYER_ITEM_EFFECT__TELEPORT)) {
-                        gPlayer.moveState &= ~MOVESTATE_400000;
+                        gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                     }
                     {
-                        struct UNK_3005510 *thing = sub_8019224();
-                        thing->unk0 = 8;
-                        thing->unk1 = mpp->unk56;
-                        thing->unk2 = 0;
+                        RoomEvent_Unknown *roomEvent = CreateRoomEvent();
+                        roomEvent->type = ROOMEVENT_TYPE_UNKNOWN;
+                        roomEvent->unk1 = mpp->unk56;
+                        roomEvent->unk2 = 0;
                     }
                 }
-                if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
-                    gPlayer.moveState &= ~(MOVESTATE_8 | MOVESTATE_FACING_LEFT);
+                if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
+                    gPlayer.moveState &= ~(MOVESTATE_STOOD_ON_OBJ | MOVESTATE_FACING_LEFT);
                     gPlayer.moveState |= MOVESTATE_IN_AIR;
                     mpp->unk60 = 30;
                 }
             } else {
-                if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
-                    gPlayer.moveState &= ~(MOVESTATE_10 | MOVESTATE_IN_AIR);
+                if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
+                    gPlayer.moveState &= ~(MOVESTATE_FLIP_WITH_MOVE_DIR | MOVESTATE_IN_AIR);
                     gPlayer.moveState |= MOVESTATE_IN_AIR;
                     mpp->unk60 = 30;
                 }
@@ -478,14 +479,14 @@ NONMATCH("asm/non_matching/game/multiplayer/mp_player__Task_CreateMultiplayerPla
         }
     }
 
-    if (gUnknown_03005B7C != 0) {
-        sub_8087368();
-        gUnknown_03005B7C = 0;
+    if (gShouldSpawnMPAttackEffect != FALSE) {
+        CreateMPAttackEffect();
+        gShouldSpawnMPAttackEffect = FALSE;
     }
 
-    if (gUnknown_0300583C != 0) {
-        sub_801A384();
-        gUnknown_0300583C = 0;
+    if (gShouldSpawnMPAttack2Effect != FALSE) {
+        CreateMPAttack2Effect();
+        gShouldSpawnMPAttack2Effect = FALSE;
     }
 }
 END_NONMATCH
@@ -498,7 +499,7 @@ void sub_8016D20(void)
     SpriteTransform *transform = &mpp->transform;
     u32 val;
 
-    if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
+    if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
         sub_8017F34();
     }
 
@@ -534,8 +535,8 @@ void sub_8016D20(void)
             gPlayer.unk61 = 0;
             gPlayer.unk62 = 0;
 
-            if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
-                gPlayer.moveState &= ~MOVESTATE_8;
+            if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
+                gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
                 gPlayer.moveState |= MOVESTATE_IN_AIR;
             }
 
@@ -548,13 +549,13 @@ void sub_8016D20(void)
             } else if (s->frameFlags & SPRITE_FLAG_MASK_X_FLIP) {
                 gPlayer.moveState &= ~MOVESTATE_FACING_LEFT;
                 gPlayer.moveState &= ~MOVESTATE_20;
-                gPlayer.speedGroundX = Q_8_8(12);
-                gPlayer.speedAirX = Q_8_8(12);
+                gPlayer.qSpeedGround = Q_8_8(12);
+                gPlayer.qSpeedAirX = Q_8_8(12);
             } else {
                 gPlayer.moveState |= MOVESTATE_FACING_LEFT;
                 gPlayer.moveState &= ~MOVESTATE_20;
-                gPlayer.speedGroundX = -Q_8_8(12);
-                gPlayer.speedAirX = -Q_8_8(12);
+                gPlayer.qSpeedGround = -Q_8_8(12);
+                gPlayer.qSpeedAirX = -Q_8_8(12);
             }
             mpp->unk60 = 30;
         } else {
@@ -578,7 +579,7 @@ void sub_8016D20(void)
                 mpp->unk60 = 30;
             }
 
-            if (!(val & (MOVESTATE_10000 | MOVESTATE_20 | MOVESTATE_8))) {
+            if (!(val & (MOVESTATE_10000 | MOVESTATE_20 | MOVESTATE_STOOD_ON_OBJ))) {
                 return;
             }
 
@@ -590,8 +591,8 @@ void sub_8016D20(void)
             gPlayer.unk61 = 0;
             gPlayer.unk62 = 0;
 
-            if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
-                gPlayer.moveState &= ~MOVESTATE_8;
+            if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
+                gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
                 gPlayer.moveState |= MOVESTATE_IN_AIR;
             }
 
@@ -604,24 +605,24 @@ void sub_8016D20(void)
             } else if (s->frameFlags & SPRITE_FLAG_MASK_X_FLIP) {
                 gPlayer.moveState &= ~MOVESTATE_FACING_LEFT;
                 gPlayer.moveState &= ~MOVESTATE_20;
-                gPlayer.speedGroundX = Q(12);
-                gPlayer.speedAirX = Q(12);
+                gPlayer.qSpeedGround = Q(12);
+                gPlayer.qSpeedAirX = Q(12);
             } else {
                 gPlayer.moveState |= MOVESTATE_FACING_LEFT;
                 gPlayer.moveState &= ~MOVESTATE_20;
-                gPlayer.speedGroundX = -Q(12);
-                gPlayer.speedAirX = -Q(12);
+                gPlayer.qSpeedGround = -Q(12);
+                gPlayer.qSpeedAirX = -Q(12);
             }
             mpp->unk60 = 30;
         }
     } else {
         mpp->unk60--;
 
-        if (!(gPlayer.moveState & MOVESTATE_8)) {
+        if (!(gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ)) {
             return;
         }
 
-        if (gPlayer.unk3C != s) {
+        if (gPlayer.stoodObj != s) {
             return;
         }
 
@@ -655,7 +656,7 @@ void sub_801707C(void)
     s = &mpp->s;
     moveStateVal = (gPlayer.moveState >> 5) & 1;
 
-    if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
+    if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
         sub_8017F34();
         someBool = TRUE;
     }
@@ -737,8 +738,8 @@ void sub_801707C(void)
                 }
 
                 if (result - gPlayer.spriteOffsetY > 0) {
-                    gPlayer.moveState |= MOVESTATE_400000;
-                    gPlayer.moveState &= ~MOVESTATE_8;
+                    gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
+                    gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
 
                     mpp->unk5C |= 4;
                     sub_8023B5C(&gPlayer, 14);
@@ -746,10 +747,10 @@ void sub_801707C(void)
                     gPlayer.spriteOffsetY = 14;
 
                     {
-                        struct UNK_3005510 *thing = sub_8019224();
-                        thing->unk0 = 8;
-                        thing->unk1 = mpp->unk56;
-                        thing->unk2 = 1;
+                        RoomEvent_Unknown *roomEvent = CreateRoomEvent();
+                        roomEvent->type = ROOMEVENT_TYPE_UNKNOWN;
+                        roomEvent->unk1 = mpp->unk56;
+                        roomEvent->unk2 = 1;
                     }
 
                     if (!GRAVITY_IS_INVERTED) {
@@ -773,7 +774,7 @@ void sub_801707C(void)
 
         if (Player_TryJump(&gPlayer)) {
             mpp->unk60 = 30;
-            gPlayer.moveState &= ~MOVESTATE_400000;
+            gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
             mpp->unk5C &= ~4;
 
         } else {
@@ -782,7 +783,7 @@ void sub_801707C(void)
                  && s->graphics.anim != SA2_ANIM_CHAR(SA2_CHAR_ANIM_20, CHARACTER_TAILS))
                 || I(gPlayer.qWorldX) <= gCamera.minX || I(gPlayer.qWorldX) >= gCamera.maxX || SOME_INVERTED_GRAVITY_MACRO
                 || moveStateVal != 0) {
-                gPlayer.moveState &= ~MOVESTATE_400000;
+                gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                 mpp->unk5C &= ~4;
                 gPlayer.charState = CHARSTATE_IDLE;
                 gPlayer.callback = Player_TouchGround;
@@ -790,8 +791,8 @@ void sub_801707C(void)
                     gPlayer.timerInvulnerability = 60;
                 }
             } else {
-                if (gPlayer.moveState & MOVESTATE_8) {
-                    gPlayer.moveState &= ~MOVESTATE_400000;
+                if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ) {
+                    gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                     mpp->unk5C &= ~4;
                 } else {
                     s32 x, y;
@@ -807,7 +808,7 @@ void sub_801707C(void)
 
                         if (result < 0) {
                             y += Q(result);
-                            gPlayer.moveState &= ~MOVESTATE_400000;
+                            gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                             gPlayer.moveState |= MOVESTATE_IN_AIR;
                             mpp->unk5C &= ~4;
                         }
@@ -819,7 +820,7 @@ void sub_801707C(void)
 
                         if (result < 0) {
                             y -= Q(result);
-                            gPlayer.moveState &= ~MOVESTATE_400000;
+                            gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                             gPlayer.moveState |= MOVESTATE_IN_AIR;
                             mpp->unk5C &= ~4;
                         }
@@ -830,18 +831,18 @@ void sub_801707C(void)
 #ifndef NON_MATCHING
                         // thanks pidgey
                         u32 speed = 0;
-                        gPlayer.speedAirX = speed;
+                        gPlayer.qSpeedAirX = speed;
                         invertedGravity = GRAVITY_IS_INVERTED;
                         if (!invertedGravity) {
                             invertedGravity = FALSE;
                         } else {
                             invertedGravity = FALSE;
                         }
-                        gPlayer.speedAirY = speed;
+                        gPlayer.qSpeedAirY = speed;
                         asm("" ::: "r2");
 #else
-                        gPlayer.speedAirX = 0;
-                        gPlayer.speedAirY = 0;
+                        gPlayer.qSpeedAirX = 0;
+                        gPlayer.qSpeedAirY = 0;
 #endif
 
                         gPlayer.moveState &= ~MOVESTATE_20;
@@ -851,10 +852,10 @@ void sub_801707C(void)
         }
 
         if (!(mpp->unk5C & 4)) {
-            struct UNK_3005510 *thing = sub_8019224();
-            thing->unk0 = 8;
-            thing->unk1 = mpp->unk56;
-            thing->unk2 = 0;
+            RoomEvent_Unknown *roomEvent = CreateRoomEvent();
+            roomEvent->type = ROOMEVENT_TYPE_UNKNOWN;
+            roomEvent->unk1 = mpp->unk56;
+            roomEvent->unk2 = 0;
         }
 
         if (!GRAVITY_IS_INVERTED) {
@@ -865,11 +866,11 @@ void sub_801707C(void)
     } else {
         mpp->unk60--;
 
-        if (!(gPlayer.moveState & MOVESTATE_8)) {
+        if (!(gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ)) {
             return;
         }
 
-        if (gPlayer.unk3C != s) {
+        if (gPlayer.stoodObj != s) {
             return;
         }
 
@@ -897,7 +898,7 @@ void sub_8017670(void)
     s = &mpp->s;
     moveStateVal = (gPlayer.moveState >> 5) & 1;
 
-    if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
+    if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
         sub_8017F34();
     }
 
@@ -966,12 +967,12 @@ void sub_8017670(void)
                     && !GRAVITY_IS_INVERTED == !(mpp->unk54 & 8)) {
                     if ((!GRAVITY_IS_INVERTED && I(gPlayer.qWorldY) > mpp->pos.y)
                         || (GRAVITY_IS_INVERTED && I(gPlayer.qWorldY) < mpp->pos.y)) {
-                        gPlayer.moveState |= MOVESTATE_400000;
+                        gPlayer.moveState |= MOVESTATE_IA_OVERRIDE;
                         sub_8023B5C(&gPlayer, 14);
                         gPlayer.spriteOffsetX = 6;
                         gPlayer.spriteOffsetY = 14;
-                        gPlayer.speedGroundX = 0;
-                        gPlayer.speedAirX = 0;
+                        gPlayer.qSpeedGround = 0;
+                        gPlayer.qSpeedAirX = 0;
                         gPlayer.charState = CHARSTATE_IDLE;
                         gPlayer.unk61 = 0;
                         gPlayer.unk62 = 0;
@@ -982,10 +983,10 @@ void sub_8017670(void)
                         }
                         if (!(mpp->unk5C & 4)) {
                             {
-                                struct UNK_3005510 *thing = sub_8019224();
-                                thing->unk0 = 8;
-                                thing->unk1 = mpp->unk56;
-                                thing->unk2 = 1;
+                                RoomEvent_Unknown *roomEvent = CreateRoomEvent();
+                                roomEvent->type = ROOMEVENT_TYPE_UNKNOWN;
+                                roomEvent->unk1 = mpp->unk56;
+                                roomEvent->unk2 = 1;
                             }
                             if (!GRAVITY_IS_INVERTED) {
                                 mpp->unk5C &= ~0x100;
@@ -1004,7 +1005,7 @@ void sub_8017670(void)
 
             if (Player_TryJump(&gPlayer) != 0) {
                 mpp->unk60 = 30;
-                gPlayer.moveState &= ~MOVESTATE_400000;
+                gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                 mpp->unk5C &= ~0x4;
                 return;
             }
@@ -1014,7 +1015,7 @@ void sub_8017670(void)
                  && s->graphics.anim != SA2_ANIM_CHAR(SA2_CHAR_ANIM_21, CHARACTER_KNUCKLES))
                 || I(gPlayer.qWorldX) <= gCamera.minX || I(gPlayer.qWorldX) >= gCamera.maxX || SOME_INVERTED_GRAVITY_MACRO
                 || moveStateVal != 0) {
-                gPlayer.moveState &= ~MOVESTATE_400000;
+                gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                 mpp->unk5C &= ~4;
                 gPlayer.charState = CHARSTATE_IDLE;
                 if (SOME_INVERTED_GRAVITY_MACRO) {
@@ -1037,7 +1038,7 @@ void sub_8017670(void)
 
                     if (result < 0) {
                         y -= QS(result);
-                        gPlayer.moveState &= ~MOVESTATE_400000;
+                        gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                         gPlayer.moveState |= MOVESTATE_IN_AIR;
                         mpp->unk5C &= ~4;
                     }
@@ -1048,7 +1049,7 @@ void sub_8017670(void)
 
                     if (result < 0) {
                         y += QS(result);
-                        gPlayer.moveState &= ~MOVESTATE_400000;
+                        gPlayer.moveState &= ~MOVESTATE_IA_OVERRIDE;
                         gPlayer.moveState |= MOVESTATE_IN_AIR;
                         mpp->unk5C &= ~4;
                     }
@@ -1058,12 +1059,12 @@ void sub_8017670(void)
             }
 
             if ((mpp->unk5C & 4)) {
-                gPlayer.moveState |= MOVESTATE_8;
+                gPlayer.moveState |= MOVESTATE_STOOD_ON_OBJ;
                 gPlayer.moveState &= ~MOVESTATE_4;
                 gPlayer.moveState &= ~MOVESTATE_IN_AIR;
 
-                gPlayer.unk3C = s;
-                gPlayer.speedAirY = 0;
+                gPlayer.stoodObj = s;
+                gPlayer.qSpeedAirY = 0;
 
                 if ((s->frameFlags & SPRITE_FLAG_MASK_X_FLIP)) {
                     gPlayer.moveState &= ~MOVESTATE_FACING_LEFT;
@@ -1073,10 +1074,10 @@ void sub_8017670(void)
             }
 
             if (!(mpp->unk5C & 4)) {
-                struct UNK_3005510 *thing = sub_8019224();
-                thing->unk0 = 8;
-                thing->unk1 = mpp->unk56;
-                thing->unk2 = 0;
+                RoomEvent_Unknown *roomEvent = CreateRoomEvent();
+                roomEvent->type = ROOMEVENT_TYPE_UNKNOWN;
+                roomEvent->unk1 = mpp->unk56;
+                roomEvent->unk2 = 0;
             }
 
             if (!GRAVITY_IS_INVERTED) {
@@ -1088,11 +1089,11 @@ void sub_8017670(void)
     } else {
         mpp->unk60--;
 
-        if (!(gPlayer.moveState & MOVESTATE_8)) {
+        if (!(gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ)) {
             return;
         }
 
-        if (gPlayer.unk3C != s) {
+        if (gPlayer.stoodObj != s) {
             return;
         }
 
@@ -1112,7 +1113,7 @@ void sub_8017C28(void)
     Sprite *s = &mpp->s;
     u32 val;
 
-    if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
+    if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
         sub_8017F34();
     }
 
@@ -1174,19 +1175,19 @@ void sub_8017C28(void)
 
             if ((val & 1)) {
                 if ((val & 0x20000)) {
-                    if (gPlayer.speedAirX > 0) {
-                        gPlayer.speedAirX = -gPlayer.speedAirX;
-                        gPlayer.speedGroundX = -gPlayer.speedGroundX;
+                    if (gPlayer.qSpeedAirX > 0) {
+                        gPlayer.qSpeedAirX = -gPlayer.qSpeedAirX;
+                        gPlayer.qSpeedGround = -gPlayer.qSpeedGround;
                     }
                 } else if ((val & 0x40000)) {
-                    if (gPlayer.speedAirX < 0) {
-                        gPlayer.speedAirX = -gPlayer.speedAirX;
-                        gPlayer.speedGroundX = -gPlayer.speedGroundX;
+                    if (gPlayer.qSpeedAirX < 0) {
+                        gPlayer.qSpeedAirX = -gPlayer.qSpeedAirX;
+                        gPlayer.qSpeedGround = -gPlayer.qSpeedGround;
                     }
                 }
 
-                if (val & 0x100000 && gPlayer.speedAirY > 0) {
-                    gPlayer.speedAirY = -gPlayer.speedAirY;
+                if (val & 0x100000 && gPlayer.qSpeedAirY > 0) {
+                    gPlayer.qSpeedAirY = -gPlayer.qSpeedAirY;
                 }
 #ifndef NON_MATCHING
             lab:
@@ -1208,11 +1209,11 @@ void sub_8017C28(void)
     } else {
         mpp->unk60--;
 
-        if (!(gPlayer.moveState & MOVESTATE_8)) {
+        if (!(gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ)) {
             return;
         }
 
-        if (gPlayer.unk3C != s) {
+        if (gPlayer.stoodObj != s) {
             return;
         }
 
@@ -1240,8 +1241,8 @@ void sub_8017F34(void)
 
     otherMpp = TASK_DATA(gMultiplayerPlayerTasks[SIO_MULTI_CNT->id]);
     if ((otherMpp->unk54 & 0x80) != (mpp->unk54 & 0x80)) {
-        gPlayer.moveState &= ~MOVESTATE_8;
-        gPlayer.unk3C = (void *)-1;
+        gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
+        gPlayer.stoodObj = (void *)-1;
         mpp->unk64 = mpp->unk56;
         return;
     }
@@ -1257,7 +1258,7 @@ void sub_8017F34(void)
         result = sub_801F100(I(gPlayer.qWorldY) - gPlayer.spriteOffsetY, I(gPlayer.qWorldX), gPlayer.layer, -8, sub_801EC3C);
         if (result < 0) {
             gPlayer.qWorldY -= Q(result);
-            gPlayer.moveState &= ~MOVESTATE_8;
+            gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
             gPlayer.moveState |= MOVESTATE_IN_AIR;
             mpp->unk60 = 30;
         }
@@ -1265,7 +1266,7 @@ void sub_8017F34(void)
         result = sub_801F100(I(gPlayer.qWorldY) + gPlayer.spriteOffsetY, I(gPlayer.qWorldX), gPlayer.layer, 8, sub_801EC3C);
         if (result < 0) {
             gPlayer.qWorldY += Q(result);
-            gPlayer.moveState &= ~MOVESTATE_8;
+            gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
             gPlayer.moveState |= MOVESTATE_IN_AIR;
             mpp->unk60 = 30;
         }
@@ -1290,7 +1291,7 @@ void sub_8018120(void)
 {
     MultiplayerPlayer *mpp = TASK_DATA(gCurTask);
     Sprite *s = &mpp->s;
-    if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
+    if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
         MultiplayerPlayer *otherMpp;
         gPlayer.qWorldX += Q(mpp->unk44);
         gPlayer.qWorldY += Q(mpp->unk48) + Q(1);
@@ -1298,8 +1299,8 @@ void sub_8018120(void)
         otherMpp = TASK_DATA(gMultiplayerPlayerTasks[SIO_MULTI_CNT->id]);
 
         if ((otherMpp->unk54 & 0x80) != (mpp->unk54 & 0x80)) {
-            gPlayer.moveState &= ~MOVESTATE_8;
-            gPlayer.unk3C = (void *)-1;
+            gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
+            gPlayer.stoodObj = (void *)-1;
             mpp->unk64 = mpp->unk56;
         }
     }
@@ -1322,27 +1323,27 @@ bool32 sub_80181E0(void)
 
         if ((val & 1)) {
             if (gPlayer.unk61 == 0 && (val & 0x20000)) {
-                if (gPlayer.speedAirX > 0) {
-                    gPlayer.speedAirX = -gPlayer.speedAirX;
-                    gPlayer.speedGroundX = -gPlayer.speedGroundX;
+                if (gPlayer.qSpeedAirX > 0) {
+                    gPlayer.qSpeedAirX = -gPlayer.qSpeedAirX;
+                    gPlayer.qSpeedGround = -gPlayer.qSpeedGround;
                 }
             } else if (gPlayer.unk61 == 0 && (val & 0x40000)) {
-                if (gPlayer.speedAirX < 0) {
-                    gPlayer.speedAirX = -gPlayer.speedAirX;
-                    gPlayer.speedGroundX = -gPlayer.speedGroundX;
+                if (gPlayer.qSpeedAirX < 0) {
+                    gPlayer.qSpeedAirX = -gPlayer.qSpeedAirX;
+                    gPlayer.qSpeedGround = -gPlayer.qSpeedGround;
                 }
             }
 
-            if (val & 0x100000 && gPlayer.speedAirY > 0) {
-                gPlayer.speedAirY = -gPlayer.speedAirY;
+            if (val & 0x100000 && gPlayer.qSpeedAirY > 0) {
+                gPlayer.qSpeedAirY = -gPlayer.qSpeedAirY;
             }
             mpp->unk60 = 30;
             return TRUE;
         }
     }
 
-    if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
-        gPlayer.moveState &= ~MOVESTATE_8;
+    if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
+        gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
         gPlayer.moveState |= MOVESTATE_IN_AIR;
     }
     return FALSE;
@@ -1370,19 +1371,19 @@ bool32 sub_8018300(void)
 
         if (val2 & 1) {
             if (gPlayer.unk61 == 0 && (val2 & 0x20000)) {
-                if (gPlayer.speedAirX > 0) {
-                    gPlayer.speedAirX = -gPlayer.speedAirX;
-                    gPlayer.speedGroundX = -gPlayer.speedGroundX;
+                if (gPlayer.qSpeedAirX > 0) {
+                    gPlayer.qSpeedAirX = -gPlayer.qSpeedAirX;
+                    gPlayer.qSpeedGround = -gPlayer.qSpeedGround;
                 }
             } else if (gPlayer.unk61 == 0 && (val2 & 0x40000)) {
-                if (gPlayer.speedAirX < 0) {
-                    gPlayer.speedAirX = -gPlayer.speedAirX;
-                    gPlayer.speedGroundX = -gPlayer.speedGroundX;
+                if (gPlayer.qSpeedAirX < 0) {
+                    gPlayer.qSpeedAirX = -gPlayer.qSpeedAirX;
+                    gPlayer.qSpeedGround = -gPlayer.qSpeedGround;
                 }
             }
 
-            if (val2 & 0x100000 && gPlayer.speedAirY > 0) {
-                gPlayer.speedAirY = -gPlayer.speedAirY;
+            if (val2 & 0x100000 && gPlayer.qSpeedAirY > 0) {
+                gPlayer.qSpeedAirY = -gPlayer.qSpeedAirY;
             }
             mpp->unk60 = 30;
 
@@ -1413,14 +1414,14 @@ bool32 sub_8018300(void)
 
         if (!HITBOX_IS_ACTIVE(sprPlayer->hitboxes[1]) && !HITBOX_IS_ACTIVE(s->hitboxes[1])) {
             u32 existingMoveState = gPlayer.moveState;
-            Sprite *existingS = gPlayer.unk3C;
+            Sprite *existingS = gPlayer.stoodObj;
             s16 x, y;
 
             val = sub_800D0A0(s, mpp->pos.x, mpp->pos.y, mpp->unk66, mpp->unk68, (mpp->unk54 >> 7) & 1, val2 & 2);
 
             if (gGameMode == GAME_MODE_MULTI_PLAYER_COLLECT_RINGS && val == 0) {
                 gPlayer.moveState = existingMoveState;
-                gPlayer.unk3C = existingS;
+                gPlayer.stoodObj = existingS;
 
                 if (mpp->pos.x > 960) {
                     val = sub_800D0A0(s, mpp->pos.x - 1440, mpp->pos.y - 864, mpp->unk66, mpp->unk68, (mpp->unk54 >> 7) & 1, val);
@@ -1437,8 +1438,8 @@ bool32 sub_8018300(void)
                 mpp->unk60 = 30;
             }
         } else {
-            if (gPlayer.moveState & MOVESTATE_8 && gPlayer.unk3C == s) {
-                gPlayer.moveState &= ~MOVESTATE_8;
+            if (gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ && gPlayer.stoodObj == s) {
+                gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
                 gPlayer.moveState |= MOVESTATE_IN_AIR;
             }
 
@@ -1451,11 +1452,11 @@ bool32 sub_8018300(void)
 
     mpp->unk60--;
 
-    if (!(gPlayer.moveState & MOVESTATE_8)) {
+    if (!(gPlayer.moveState & MOVESTATE_STOOD_ON_OBJ)) {
         return FALSE;
     }
 
-    if (gPlayer.unk3C != s) {
+    if (gPlayer.stoodObj != s) {
         return FALSE;
     }
 
@@ -1490,7 +1491,7 @@ void Task_HandleLaunchPlayer(void)
         s16 *airSpeed = TASK_DATA(gCurTask);
         gPlayer.moveState &= ~MOVESTATE_IGNORE_INPUT;
         gPlayer.moveState &= ~MOVESTATE_800000;
-        gPlayer.moveState &= ~MOVESTATE_8;
+        gPlayer.moveState &= ~MOVESTATE_STOOD_ON_OBJ;
         gPlayer.moveState |= MOVESTATE_IN_AIR;
         gPlayer.moveState &= ~MOVESTATE_100;
         gPlayer.charState = CHARSTATE_SPRING_B;
@@ -1499,7 +1500,7 @@ void Task_HandleLaunchPlayer(void)
         gPlayer.spriteOffsetX = 6;
         gPlayer.spriteOffsetY = 14;
         m4aSongNumStart(SE_SPRING);
-        gPlayer.speedAirY = *airSpeed;
+        gPlayer.qSpeedAirY = *airSpeed;
         TaskDestroy(gCurTask);
         return;
     }

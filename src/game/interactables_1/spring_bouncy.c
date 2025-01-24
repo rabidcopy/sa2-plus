@@ -100,8 +100,8 @@ static void Task_Interactable_BouncySpring()
 
     s->x = screenX - gCamera.x;
     s->y = screenY - gCamera.y;
-    if (!(gPlayer.moveState & (MOVESTATE_400000 | MOVESTATE_DEAD))) {
-        airSpeed = gPlayer.speedAirY;
+    if (!(gPlayer.moveState & (MOVESTATE_IA_OVERRIDE | MOVESTATE_DEAD))) {
+        airSpeed = gPlayer.qSpeedAirY;
         if ((sub_800CCB8(s, screenX, screenY, &gPlayer) != 0)) {
             u8 index;
 
@@ -109,15 +109,15 @@ static void Task_Interactable_BouncySpring()
             if (index > (ARRAY_COUNT(gUnknown_080D948C) - 1))
                 index = (ARRAY_COUNT(gUnknown_080D948C) - 1);
 
-            gPlayer.speedAirY = -(airSpeed + (airSpeed >> 3));
+            gPlayer.qSpeedAirY = -(airSpeed + (airSpeed >> 3));
 
-            if (gPlayer.speedAirY > Q_8_8(-7.5))
-                gPlayer.speedAirY = Q_8_8(-7.5);
+            if (gPlayer.qSpeedAirY > Q_8_8(-7.5))
+                gPlayer.qSpeedAirY = Q_8_8(-7.5);
 
-            if (gPlayer.speedAirY < Q_8_8(-12))
-                gPlayer.speedAirY = Q_8_8(-12);
+            if (gPlayer.qSpeedAirY < Q_8_8(-12))
+                gPlayer.qSpeedAirY = Q_8_8(-12);
 
-            gPlayer.unk36 = 3;
+            gPlayer.disableTrickTimer = 3;
 
             Player_TransitionCancelFlyingAndBoost(&gPlayer);
             sub_8023B5C(&gPlayer, 14);
