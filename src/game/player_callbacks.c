@@ -600,7 +600,7 @@ void Player_Sonic_DropDash(Player *p)
     if (p->heldInput & gPlayerControls.jump) {
 
         // Get Speed
-        s32 baseVelocity = ABS(Q(p->speedGroundX * Q(0.25)));
+        s32 baseVelocity = ABS(Q(p->qSpeedGround * Q(0.25)));
         s32 speed = MAX(Q(8.0) + p->dropdashAccel, Q(12.0));
 
         if (p->dropdashAccel < Q(4)) {
@@ -619,7 +619,7 @@ void Player_Sonic_DropDash(Player *p)
         // Set Speed and roll state
         m4aSongNumStart(SE_SPIN_DASH_RELEASE);
         CreateSpindashDustEffect();
-        p->speedGroundX = speed;
+        p->qSpeedGround = speed;
         p->dropdashAccel = 0;
     }
 }
