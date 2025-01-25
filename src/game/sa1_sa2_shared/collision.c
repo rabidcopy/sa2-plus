@@ -320,7 +320,7 @@ void Collision_AdjustPlayerSpeed(Player *p)
         // Also triggered on homing-attack.
         // Slight boost upwards for the player.
         p->transition = PLTRANS_HOMING_ATTACK_RECOIL;
-        p->qSpeedAirX = 0;
+        // p->qSpeedAirX = 0;
         p->qSpeedAirY = 0;
     } else if (IS_BOSS_STAGE(gCurrentLevel)) {
         s32 speedX = -(p->qSpeedAirX >> 1);

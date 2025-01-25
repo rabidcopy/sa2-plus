@@ -434,16 +434,21 @@ void Player_Sonic_InitHomingAttack(Player *p)
 
 void Player_InitHomingAttackRecoil(Player *p)
 {
-    Player_TransitionCancelFlyingAndBoost(p);
+    // Player_TransitionCancelFlyingAndBoost(p);
     p->moveState |= (MOVESTATE_100 | MOVESTATE_IN_AIR);
     p->moveState &= ~(MOVESTATE_SOME_ATTACK | MOVESTATE_1000000 | MOVESTATE_20);
 
     PLAYERFN_CHANGE_SHIFT_OFFSETS(p, 6, 14);
 
-    p->charState = CHARSTATE_FALLING_VULNERABLE_B;
+    p->charState = CHARSTATE_CURLED_IN_AIR;
 
-    p->qSpeedAirX = 0;
-    p->qSpeedAirY = -Q(4.0);
+    // p->qSpeedAirX = 0;
+    if (p->moveState & MOVESTATE_FACING_LEFT)
+        p->qSpeedAirX -= Q(1.25);
+    else
+        p->qSpeedAirX += Q(1.25);
+
+    p->qSpeedAirY = -Q(4.25);
     p->rotation = 0;
 
     p->unk70 = TRUE;
@@ -452,7 +457,7 @@ void Player_InitHomingAttackRecoil(Player *p)
     p->spriteInfoBody->s.frameFlags &= ~SPRITE_FLAG_MASK_ANIM_OVER;
     p->rotation = 0;
 
-    PLAYERFN_SET_AND_CALL(Player_Uncurl, p);
+    PLAYERFN_SET_AND_CALL(Player_Jumping, p);
 }
 
 void Player_UpdateHomingPosition(s32 qX, s32 qY)

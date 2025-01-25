@@ -6119,8 +6119,13 @@ bool32 Player_TryMidAirAction(Player *p)
         if (p->frameInput & gPlayerControls.trick) {
             switch (p->character) {
                 case CHARACTER_SONIC: {
-                    Player_Sonic_TryForwardThrust(p);
-                    return TRUE;
+                    if (!IS_BOSS_STAGE(gCurrentLevel) && gHomingTarget.squarePlayerDistance < SQUARE(128)) {
+                        Player_Sonic_InitHomingAttack(p);
+                        return TRUE;
+                    } else {
+                        Player_Sonic_TryForwardThrust(p);
+                        return TRUE;
+                    }
                 }
             }
         }

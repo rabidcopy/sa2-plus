@@ -31,6 +31,7 @@ void Player_SpinAttack(Player *);
 void Player_AirInputControls(Player *);
 void Player_TouchGround(Player *p);
 void Player_Uncurl(Player *p);
+void Player_Jumping(Player *);
 void Player_HandlePhysicsWithAirInput(Player *p);
 void sub_8028204(Player *p);
 void sub_80282EC(Player *p);
