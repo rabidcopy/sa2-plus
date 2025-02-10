@@ -12,20 +12,13 @@
 
 #include "game/stage/rings_scatter.h"
 #include "game/sa1_sa2_shared/collect_ring_effect.h"
-#include "game/sa1_sa2_shared/rings_manager.h" // for RESERVED_RING_TILES_VRAM
+#include "game/sa1_sa2_shared/rings_manager.h"
 
 #include "constants/animations.h"
 #include "constants/songs.h"
 
 #define MAX_SCATTERING_RINGS_COUNT_SP 32
 #define MAX_SCATTERING_RINGS_COUNT_MP 16
-
-#define PLAYER_TOUCHING_RING(p, rect, ringIntX, ringIntY)                                                                                  \
-    ((((ringIntX - TILE_WIDTH) <= RECT_LEFT(I(p->qWorldX), rect) && (ringIntX + TILE_WIDTH) >= RECT_LEFT(I(p->qWorldX), rect))             \
-      || ((ringIntX - TILE_WIDTH) >= RECT_LEFT(I(p->qWorldX), rect) && RECT_RIGHT(I(p->qWorldX), rect) >= (ringIntX - TILE_WIDTH)))        \
-     && ((((ringIntY - (TILE_WIDTH * 2)) <= RECT_TOP(I(p->qWorldY), rect) && ringIntY >= RECT_TOP(I(p->qWorldY), rect))                    \
-          || ((ringIntY - (TILE_WIDTH * 2)) >= RECT_TOP(I(p->qWorldY), rect)                                                               \
-              && RECT_BOTTOM(I(p->qWorldY), rect) >= (ringIntY - (TILE_WIDTH * 2))))))
 
 typedef struct {
     /* 0x00 */ s32 x;
@@ -261,11 +254,8 @@ void RingsScatterSingleplayer_FlippedGravity(void)
 
         hb = &p->spriteInfoBody->s.hitboxes[0];
         if (ring->unkC <= sp0C && (p->charState != SA2_CHAR_ANIM_20 || p->timerInvulnerability == 0) && IS_ALIVE(p)) {
-            struct Rect8 *rect = (struct Rect8 *)&hb->left;
-            if (PLAYER_TOUCHING_RING(p, rect, ringIntX, ringIntY)) {
-                s32 oldRingCount;
-                // _0801FF70
-
+            Rect8 *rect = (Rect8 *)&hb->left;
+            if (RECT_TOUCHING_RING(I(p->qWorldX), I(p->qWorldY), ringIntX, ringIntY, rect)) {
                 CreateCollectRingEffect(ringIntX, ringIntY);
 
                 INCREMENT_RINGS(1);
@@ -378,8 +368,8 @@ void RingsScatterSingleplayer_NormalGravity(void)
 
         hb = &p->spriteInfoBody->s.hitboxes[0];
         if ((ring->unkC <= sp0C) && ((p->charState != SA2_CHAR_ANIM_20) || (p->timerInvulnerability == 0)) && IS_ALIVE(p)) {
-            struct Rect8 *rect = (struct Rect8 *)&hb->left;
-            if (PLAYER_TOUCHING_RING(p, rect, ringIntX, ringIntY)) {
+            Rect8 *rect = (Rect8 *)&hb->left;
+            if (RECT_TOUCHING_RING(I(p->qWorldX), I(p->qWorldY), ringIntX, ringIntY, rect)) {
                 CreateCollectRingEffect(ip, ringIntY);
 
                 INCREMENT_RINGS(1);

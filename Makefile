@@ -3,16 +3,6 @@
 #
 include config.mk
 
-# TODO: compile songs to C so that we can work around this.
-#
-# MacOS refuses to link the songs data because some pointers
-# are not aligned. The music player code reads pointers from raw
-# bytes, so they don't need to be aligned. But this is a simple
-# work around which tells the compiler not to care. Once we are
-# compiling the songs to C, we can cast the pointers to integers
-# which means the linker will not notice
-export MACOSX_DEPLOYMENT_TARGET := 11
-
 MAKEFLAGS += --no-print-directory
 
 # Clear the default suffixes
@@ -107,7 +97,7 @@ ifeq ($(CREATE_PDB),1)
 CV2PDB    := ./cv2pdb.exe
 endif
 
-TOOLDIRS := $(filter-out tools/Makefile tools/agbcc tools/binutils tools/BriBaSA_ex,$(wildcard tools/*))
+TOOLDIRS := $(filter-out tools/agbcc/ tools/BriBaSA_ex/, $(dir $(wildcard tools/*/Makefile)))
 TOOLBASE = $(TOOLDIRS:tools/%=%)
 TOOLS = $(foreach tool,$(TOOLBASE),tools/$(tool)/$(tool)$(EXE))
 
@@ -139,15 +129,13 @@ ELF      := $(ROM:.exe=.elf)
 MAP      := $(ROM:.exe=.map)
 endif
 
+INCLUDE_DIRS = include
+INCLUDE_CPP_ARGS := $(INCLUDE_DIRS:%=-iquote %)
+INCLUDE_SCANINC_ARGS := $(INCLUDE_DIRS:%=-I %)
+
 ASM_SUBDIR = asm
-
-ifeq ($(CPU_ARCH),arm)
 ASM_BUILDDIR = $(OBJ_DIR)/$(ASM_SUBDIR)
-else
-ASM_BUILDDIR =
-endif
 
-C_INCLUDEDIR = include
 C_SUBDIR = src
 C_BUILDDIR = $(OBJ_DIR)/$(C_SUBDIR)
 
@@ -182,18 +170,15 @@ endif
 C_OBJS := $(patsubst $(C_SUBDIR)/%.c,$(C_BUILDDIR)/%.o,$(C_SRCS))
 
 # Platform not included as we only need the headers for decomp scratches
-C_HEADERS := $(shell find $(C_INCLUDEDIR) -name "*.h" -not -path "*/platform/*")
+C_HEADERS := $(shell find $(INCLUDE_DIRS) -name "*.h" -not -path "*/platform/*")
 
 ifeq ($(PLATFORM),gba)
 C_ASM_SRCS := $(shell find $(C_SUBDIR) -name "*.s")
 C_ASM_OBJS := $(patsubst $(C_SUBDIR)/%.s,$(C_BUILDDIR)/%.o,$(C_ASM_SRCS))
-ASM_SRCS := $(wildcard $(ASM_SUBDIR)/*.s)
-else
-# Don't include asm sources on non-gba platforms
-ASM_SRCS :=
-endif
 
+ASM_SRCS := $(wildcard $(ASM_SUBDIR)/*.s)
 ASM_OBJS := $(patsubst $(ASM_SUBDIR)/%.s,$(ASM_BUILDDIR)/%.o,$(ASM_SRCS))
+endif
 
 DATA_ASM_SRCS := $(wildcard $(DATA_ASM_SUBDIR)/*.s)
 DATA_ASM_OBJS := $(patsubst $(DATA_ASM_SUBDIR)/%.s,$(DATA_ASM_BUILDDIR)/%.o,$(DATA_ASM_SRCS))
@@ -218,15 +203,22 @@ FORMAT_H_PATHS   := $(shell find . -name "*.h" ! -path '*/build/*' ! -path '*/ex
 # -P disables line markers (don't EVER use this, if you want proper debug info!)
 # -I sets an include path
 # -D defines a symbol
-CPPFLAGS ?= -iquote $(C_INCLUDEDIR) -D $(GAME_REGION)
+CPPFLAGS ?= $(INCLUDE_CPP_ARGS) -D $(GAME_REGION)
 CC1FLAGS ?= -Wimplicit -Wparentheses -Werror
 
 # These have to(?) be defined this way, because
 # the C-preprocessor cannot resolve stuff like:
 # #if (PLATFORM == gba), where PLATFORM is defined via -D.
 ifeq ($(PLATFORM),gba)
+	INCLUDE_SCANINC_ARGS += -I tools/agbcc/include
 	CPPFLAGS += -D PLATFORM_GBA=1 -D PLATFORM_SDL=0 -D PLATFORM_WIN32=0 -D CPU_ARCH_X86=0 -D CPU_ARCH_ARM=1 -nostdinc -I tools/agbcc/include
 	CC1FLAGS += -fhex-asm
+
+ifeq ($(BUILD_NAME), sa1)
+    # It seems this bug was introduced to GCC after SA1 released.
+    PROLOGUE_FIX := -fprologue-bugfix
+endif # BUILD_NAME == sa1
+
 else
 	CC1FLAGS += -Wstrict-overflow=1
 	ifeq ($(PLATFORM),sdl)
@@ -279,6 +271,12 @@ else
   CPPFLAGS += -D PORTABLE=0
 endif
 
+ifeq ($(TAS_TESTING),1)
+  CPPFLAGS += -D TAS_TESTING=1
+else
+  CPPFLAGS += -D TAS_TESTING=0
+endif
+
 ifeq ($(NON_MATCHING),1)
 # TODO: We use "#if(n)def NON_MATCHING a lot, maybe we should switch to "#if (!)NON_MATCHING"
 #    CPPFLAGS += -D NON_MATCHING=1
@@ -321,7 +319,7 @@ endif
 #### MAIN TARGETS ####
 
 # these commands will run regardless of deps being completed
-.PHONY: clean tools clean-tools $(TOOLDIRS) libagbsyscall
+.PHONY: clean tools tidy clean-tools $(TOOLDIRS) libagbsyscall
 
 # Ensure required directories exist
 $(shell mkdir -p $(C_BUILDDIR) $(ASM_BUILDDIR) $(DATA_ASM_BUILDDIR) $(SOUND_ASM_BUILDDIR) $(SONG_BUILDDIR) $(MID_BUILDDIR))
@@ -344,12 +342,36 @@ else
 NODEP ?= 1
 endif
 
+# When not building tools, we should specify this
+ifneq ($(NODEP),1)
+# MacOS refuses to link the songs data because some pointers
+# are not aligned. The music player code reads pointers from raw
+# bytes, so they don't need to be aligned. But this is a simple
+# work around which tells the compiler not to care. Once we are
+# compiling the songs to C, we can cast the pointers to integers
+# which means the linker will not notice.
+#
+# TODO: compile songs to C so that we can work around this.
+export MACOSX_DEPLOYMENT_TARGET := 11
+endif
+
+ifeq ($(PLATFORM),gba)
+# Use the old compiler for m4a, as it was prebuilt and statically linked to the original codebase
+# PROLOGUE_FIX has to be set to nothing, since -fprologue-bugfix does not work with oldagbcc
+$(C_BUILDDIR)/lib/m4a/m4a.o: CC1 := $(CC1_OLD)
+$(C_BUILDDIR)/lib/m4a/m4a.o: PROLOGUE_FIX :=
+# Use `-O1` for agb_flash libs, as these were also prebuilt
+$(C_BUILDDIR)/lib/agb_flash/agb_flash.o:  CC1FLAGS := -O1 -mthumb-interwork -Werror
+$(C_BUILDDIR)/lib/agb_flash/agb_flash%.o: CC1FLAGS := -O1 -mthumb-interwork -Werror
+endif
+
+#### Main Targets ####
+
 ifeq ($(PLATFORM),gba)
 all: compare
 
 compare: rom
 	$(SHA1) $(BUILD_NAME).sha1
-
 else
 all: rom
 endif
@@ -362,6 +384,7 @@ tool_libs:
 	@$(MAKE) -C tools/_shared
 
 clean: tidy clean-tools
+	@$(MAKE) clean -C tools/BriBaSA_ex
 	@$(MAKE) clean -C chao_garden
 	@$(MAKE) clean -C multi_boot/subgame_bootstrap
 	@$(MAKE) clean -C multi_boot/programs/subgame_loader
@@ -375,21 +398,13 @@ clean-tools:
 	@$(foreach tooldir,$(TOOLDIRS),$(MAKE) clean -C $(tooldir);)
 
 tidy:
-	$(RM) $(ROM) $(ELF) $(MAP)
-	$(RM) $(BUILD_NAME)_europe.gba $(BUILD_NAME)_europe.elf $(BUILD_NAME)_europe.map
-	$(RM) $(BUILD_NAME)_japan.gba $(BUILD_NAME)_japan.elf $(BUILD_NAME)_japan.map
 	$(RM) -r build/*
 	$(RM) SDL2.dll
-ifeq ($(PLATFORM), GBA)
-	$(MAKE) tidy PLATFORM=win32 CPU_ARCH=i386
-	$(MAKE) tidy PLATFORM=sdl_win32 CPU_ARCH=i386
-	$(MAKE) tidy PLATFORM=sdl
-endif
+	$(RM) $(BUILD_NAME)*.exe $(BUILD_NAME)*.elf $(BUILD_NAME)*.map $(BUILD_NAME)*.sdl $(BUILD_NAME)*.gba
 
 japan: ; @$(MAKE) GAME_REGION=JAPAN
 
 europe: ; @$(MAKE) GAME_REGION=EUROPE
-
 
 sdl: ; @$(MAKE) PLATFORM=sdl
 
@@ -398,7 +413,8 @@ sdl_win32:
 
 win32: ; @$(MAKE) PLATFORM=win32 CPU_ARCH=i386
 
-#### Recipes ####
+#### RECIPES ####
+tas_sdl: ; @$(MAKE) sdl TAS_TESTING=1
 
 include songs.mk
 include graphics.mk
@@ -413,9 +429,9 @@ include graphics.mk
 %.gbapal: %.pal ; $(GFX) $< $@
 %.gbapal: %.png ; $(GFX) $< $@
 
-chao_garden/mb_chao_garden.gba.lz: chao_garden/mb_chao_garden.gba
+chao_garden/mb_chao_garden.gba.lz: chao_garden/mb_chao_garden.gba 
 	$(GFX) $< $@ -search 1
-
+    
 data/mb_chao_garden_japan.gba.lz: data/mb_chao_garden_japan.gba
 	$(GFX) $< $@ -search 1
 
@@ -465,50 +481,43 @@ ifeq ($(CREATE_PDB),1)
 endif
 endif
 
-# Scan the C dependencies to determine if headers have changed
-ifeq ($(NODEP),1)
-$(OBJ_DIR)/src/%.o: c_dep :=
-else
-$(OBJ_DIR)/src/%.o: C_FILE = $(*D)/$(*F).c
-$(OBJ_DIR)/src/%.o: c_dep = $(shell $(SCANINC) -I include $(C_FILE:$(OBJ_DIR)/=) 2>/dev/null)
-endif
-
-ifeq ($(PLATFORM),gba)
-# Use the old compiler for m4a, as it was prebuilt and statically linked
-# to the original codebase
-$(C_BUILDDIR)/lib/m4a/m4a.o: CC1 := $(CC1_OLD)
-# Use `-O1` for agb_flash libs, as these were also prebuilt
-$(C_BUILDDIR)/lib/agb_flash/agb_flash.o: CC1FLAGS := -O1 -mthumb-interwork -Werror
-$(C_BUILDDIR)/lib/agb_flash/agb_flash%.o: CC1FLAGS := -O1 -mthumb-interwork -Werror
-endif
-
 # Build c sources, and ensure alignment
-$(C_OBJS): $(OBJ_DIR)/%.o: %.c $$(c_dep)
+$(C_BUILDDIR)/%.o: $(C_SUBDIR)/%.c
 	@echo "$(CC1) <flags> -o $@ $<"
-	@$(shell mkdir -p $(shell dirname '$(OBJ_DIR)/$*.i'))
-	@$(CPP) $(CPPFLAGS) $< -o $(OBJ_DIR)/$*.i
-	@$(PREPROC) $(OBJ_DIR)/$*.i | $(CC1) $(CC1FLAGS) -o $(OBJ_DIR)/$*.s -
+	@$(shell mkdir -p $(shell dirname '$(C_BUILDDIR)/$*.i'))
+	@$(CPP) $(CPPFLAGS) $< -o $(C_BUILDDIR)/$*.i
+	@$(PREPROC) $(C_BUILDDIR)/$*.i | $(CC1) $(PROLOGUE_FIX) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s -
 ifeq ($(PLATFORM), gba)
-	@printf ".text\n\t.align\t2, 0\n" >> $(OBJ_DIR)/$*.s
+	@printf ".text\n\t.align\t2, 0\n" >> $(C_BUILDDIR)/$*.s
 endif
-	@$(AS) $(ASFLAGS) $(OBJ_DIR)/$*.s -o $@
+	@$(AS) $(ASFLAGS) $(C_BUILDDIR)/$*.s -o $@
+
+# Scan the src dependencies to determine if any dependent files have changed
+$(C_BUILDDIR)/%.d: $(C_SUBDIR)/%.c
+	@$(shell mkdir -p $(shell dirname '$(C_BUILDDIR)/$*.d'))
+	$(SCANINC) -M $@ $(INCLUDE_SCANINC_ARGS) $<
 
 # rule for sources from the src dir (parts of libraries)
 $(C_BUILDDIR)/%.o: $(C_SUBDIR)/%.s
 	@echo "$(AS) <flags> -o $@ $<"
 	@$(AS) $(ASFLAGS) -o $@ $<
 
+$(ASM_BUILDDIR)/%.o: $(ASM_SUBDIR)/%.s $$(asm_dep)
+	@echo "$(AS) <flags> -o $@ $<"
+	@$(AS) $(ASFLAGS) -o $@ $<
 
-# Scan the ASM data dependencies to determine if any .inc files have changed
-ifeq ($(NODEP),1)
-$(DATA_ASM_BUILDDIR)/%.o: data_dep :=
-else
-$(DATA_ASM_BUILDDIR)/%.o: data_dep = $(shell $(SCANINC) $(DATA_ASM_SUBDIR)/$*.s)
-endif
-
-$(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s $$(data_dep)
+$(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s
 	@echo "$(AS) <flags> -o $@ $<"
 	@$(PREPROC) $< "" | $(CPP) $(CPPFLAGS) - | $(AS) $(ASFLAGS) -o $@ -
+
+# Scan the ASM data dependencies to determine if any .inc files have changed
+$(DATA_ASM_BUILDDIR)/%.d: $(DATA_ASM_SUBDIR)/%.s
+	$(SCANINC) -M $@ $(INCLUDE_SCANINC_ARGS) -I "" $<
+    
+ifneq ($(NODEP),1)
+-include $(addprefix $(OBJ_DIR)/,$(C_SRCS:.c=.d))
+-include $(addprefix $(OBJ_DIR)/,$(DATA_ASM_SRCS:.s=.d))
+endif
 
 $(SONG_BUILDDIR)/%.o: $(SONG_SUBDIR)/%.s
 	@echo "$(AS) <flags> -o $@ $<"
@@ -526,7 +535,7 @@ endif
 
 chao_garden: tools
 	@$(MAKE) -C chao_garden DEBUG=0
-
+    
 # Dependency here is already explicit, but we sometimes get a race condition if this
 # is not specified
 multi_boot/subgame_bootstrap/subgame_bootstrap.gba: multi_boot/programs/subgame_loader/subgame_loader.bin
@@ -570,7 +579,7 @@ bribasa:
 
 $(TOOLDIRS): tool_libs
 	@$(MAKE) -C $@
-
+    
 ### DEPS INSTALL COMMANDS ###
 
 $(SDL_MINGW_LIB):
@@ -595,5 +604,6 @@ check_format:
 
 ctx.c: $(C_HEADERS)
 	@for header in $(C_HEADERS); do echo "#include \"$$header\""; done > ctx.h
-	$(CPP) -P $(CPPFLAGS) ctx.h -o ctx.c
-	@rm ctx.h
+	gcc -P -E -dD -undef -nostdinc -I include -D GEN_CTX=1 ctx.h | sed '/^#define __STDC/d' | sed '1s|^|#include <stdint.h>\n|' > ctx.c
+
+

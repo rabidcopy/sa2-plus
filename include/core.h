@@ -1,7 +1,9 @@
 #ifndef GUARD_MAIN_H
 #define GUARD_MAIN_H
 // for memcpy
+#ifndef GEN_CTX
 #include <string.h>
+#endif
 
 #include "global.h"
 #include "sprite.h"
@@ -265,7 +267,6 @@ extern u16 gBgCntRegs[4];
 //       [4]{s16 x, s16 y}
 extern s16 gBgScrollRegs[NUM_BACKGROUNDS][2];
 
-extern OamData gUnknown_030022C8;
 extern OamData gOamBuffer2[OAM_ENTRY_COUNT];
 extern OamData gOamBuffer[OAM_ENTRY_COUNT];
 
@@ -279,11 +280,11 @@ extern void *gBgOffsetsHBlank;
 extern u16 gUnknown_030017F0;
 extern s16 gUnknown_030017F4[2];
 extern u8 gUnknown_03001850[32];
-extern FuncType_030053A0 gUnknown_03001870[4];
+extern FuncType_030053A0 gVBlankCallbacks[4];
 
 extern u8 gOamFreeIndex;
 extern u16 gUnknown_03001944;
-extern u8 gUnknown_03001948;
+extern u8 gNumVBlankIntrs;
 extern u16 gUnknown_0300194C;
 
 extern Tilemap **gTilemapsRef;
@@ -340,8 +341,10 @@ extern struct GraphicsData gVramGraphicsCopyQueueBuffer[32];
 
 extern void *gUnknown_030022AC;
 extern void *gUnknown_030022C0;
+#if (GAME == GAME_SA2)
 extern s16 gMosaicReg;
 extern u8 gUnknown_030026F4;
+#endif
 extern u16 gUnknown_03002820;
 extern u8 gUnknown_03002874;
 extern void *gUnknown_03002878;
@@ -353,7 +356,7 @@ extern u16 gUnknown_03002A8C;
 extern u8 gOamFirstPausedIndex;
 extern u8 gBackgroundsCopyQueueCursor;
 extern Sprite *gUnknown_03004D10[16];
-extern u8 gUnknown_03004D50;
+extern u8 gNumVBlankCallbacks;
 extern void *gUnknown_03004D54;
 extern u16 gUnknown_03004D58;
 extern u8 gVramGraphicsCopyCursor;
@@ -361,7 +364,7 @@ extern u8 gUnknown_03004D60[0x20];
 extern u8 gUnknown_03005390;
 extern u16 gUnknown_03005394;
 extern u16 gUnknown_03005398;
-extern FuncType_030053A0 gUnknown_030053A0[4];
+extern FuncType_030053A0 gVBlankIntrs[4];
 extern s32 gPseudoRandom;
 extern u8 gUnknown_03002710[128];
 extern struct MultiBootParam gMultiBootParam;

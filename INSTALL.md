@@ -37,11 +37,8 @@ sudo apt install build-essential binutils-arm-none-eabi gcc-arm-none-eabi libpng
 ### On MacOS
 
 ```
-brew install libpng sdl2 mingw-w64
+brew install libpng sdl2 mingw-w64 arm-none-eabi-gcc
 ```
-
-Install [**devkitARM**](http://devkitpro.org/wiki/Getting_Started/devkitARM) (Skip if not building the GBA)
-
 
 ## Install `agbcc` into the repo (skip if not compiling for the GBA)
 
@@ -51,6 +48,8 @@ Inside the `agbcc` folder, run `./build.sh` and then install the compiler in thi
 
 
 ## Building
+
+Clone/Download the repo
 
 The repo targets multiple platforms. You don't need to build the rom to build the port, so skip that step if you just want to run it on the PC.
 
