@@ -1,208 +1,24 @@
-name: CI
+name: Build SDL Win32
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-  pull_request_target:
+  workflow_dispatch:
 
 jobs:
-  format:
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork || github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork}} 
+  build-sdl-win32:
     runs-on: ubuntu-22.04
+    name: Build sdl_win32 (Ubuntu)
     steps:
-      - name: Checkout PR
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target'}} 
-        uses: actions/checkout@master
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
       - name: Checkout
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@master
-      
-      - name: Install tools
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
         run: |
-          sudo apt update && sudo apt install clang-format-13
-      
-      - name: Check formatting
-        run: |
-          make check_format
+          sudo apt update && sudo apt install -y xorg-dev libsdl2-dev gcc-mingw-w64 libarchive-tools
 
-  build-gba:
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork || github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork}} 
-    runs-on: ubuntu-22.04
-    name: Build GBA
-    steps:
-      - name: Checkout PR
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target'}} 
-        uses: actions/checkout@master
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Checkout
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@master
-       
-      - name: Checkout gh-pages
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@master
-        with:
-          path: gh-pages
-          ref: gh-pages
-
-      - name: Checkout agbcc
-        uses: actions/checkout@master
-        with:
-          path: agbcc
-          repository: SAT-R/agbcc
-
-      - name: Install tools
-        run: |
-          sudo apt update && sudo apt install gcc-arm-none-eabi binutils-arm-none-eabi xorg-dev
-          python3 -m pip install gitpython
-        # build-essential, git, and libpng-dev are already installed
-        # gcc-arm-none-eabi is only needed for the modern build
-        # as an alternative to dkP
-
-      - name: Install agbcc
-        run: |
-          ./build.sh
-          ./install.sh ../
-        working-directory: agbcc
-
-      - name: Compare
-        run: make -j${nproc}
-
-      - name: Progress
-        run: |
-          python3 scripts/progress.py text
-
-      - name: Generate reports
-        if: ${{ github.event_name == 'push' }}
-        run: |
-          mkdir -p gh-pages/reports
-          mkdir -p gh-pages/maps
-          python3 scripts/progress.py csv >> gh-pages/reports/progress-sa2-nonmatching.csv
-          python3 scripts/progress.py csv -m >> gh-pages/reports/progress-sa2-matching.csv
-          python3 scripts/progress.py shield-json > gh-pages/reports/progress-sa2-shield.json
-          python3 scripts/progress.py shield-json -m > gh-pages/reports/progress-sa2-shield-matching.json
-          echo "REPORTS_COMMIT_MSG=$( git log --format=%s ${GITHUB_SHA} )" >> $GITHUB_ENV
-          cp sa2.map gh-pages/maps/${GITHUB_SHA}.map
-
-      #- name: Japan
-        #run: |
-          #make clean
-          #make japan -j${nproc}
-          
-      - name: Europe
-        run: |
-          make clean
-          make europe -j${nproc}
-
-      - name: Update reports
-        if: ${{ github.event_name == 'push' }}
-        uses: EndBug/add-and-commit@v7
-        with:
-          branch: gh-pages
-          cwd: "./gh-pages"
-          add: "reports maps"
-          message: ${{ env.REPORTS_COMMIT_MSG }}
-
-  ports:
-    strategy:
-      matrix: 
-        platform: ["sdl", "sdl_win32", "win32"]
-        os: ["ubuntu-22.04", "macos-15"]
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork || github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork}} 
-    runs-on: ${{ matrix.os }}
-    name: Build ${{ matrix.platform }} (${{ matrix.os }})
-    steps:
-      - name: Checkout PR
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target'}} 
-        uses: actions/checkout@master
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Checkout
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@master
-
-      - name: Install tools (Linux)
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
-        run: |
-          sudo apt update && sudo apt install xorg-dev libsdl2-dev gcc-mingw-w64 libarchive-tools
-
-      - name: Install Tools (Macos)
-        if: ${{ matrix.os == 'macos-15' }}
-        run: |
-          brew install libpng sdl2 mingw-w64 arm-none-eabi-gcc
-  
-      - name: Install SDL for win32
-        if: ${{ matrix.platform == 'sdl_win32' }}
+      - name: Build SDL2.dll
         run: |
           make SDL2.dll
-  
-      - name: ${{ matrix.platform }}
-        run: |
-          make -j${nproc} ${{ matrix.platform }}
 
-  test:
-    strategy:
-      matrix: 
-        platform: ["sdl"]
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork || github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork}} 
-    runs-on: ubuntu-22.04
-    name: TAS Test ${{ matrix.platform }}
-    steps:
-      - name: Checkout PR
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target'}} 
-        uses: actions/checkout@master
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Checkout
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@master
-
-      - name: Install tools
+      - name: Build sdl_win32
         run: |
-          sudo apt update && sudo apt install xorg-dev libsdl2-dev gcc-mingw-w64 libarchive-tools
-  
-      - name: Install SDL for win32
-        if: ${{ matrix.platform == 'sdl_win32' }}
-        run: |
-          make SDL2.dll
-  
-      - name: Build ${{ matrix.platform }}
-        run: |
-          make -j${nproc} ${{ matrix.platform }} TAS_TESTING=1
-      
-      - name: Run TAS
-        timeout-minutes: 1
-        env:
-          HEADLESS: true
-        run: |
-          ./sa2.${{ matrix.platform }}
-
-  level_editor:
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork || github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork}} 
-    runs-on: ubuntu-22.04
-    name: Level editor (BriBaSA)
-    steps:
-      - name: Checkout PR
-        if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target'}} 
-        uses: actions/checkout@master
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Checkout
-        if: ${{ github.event_name == 'push' }}
-        uses: actions/checkout@master
-
-      - name: Install deps
-        run: |
-          sudo apt update && sudo apt install xorg-dev libsdl2-dev
-  
-      - name: Build
-        run: |
-          make -j${nproc} bribasa
+          make -j$(nproc) sdl_win32
