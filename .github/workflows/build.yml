@@ -22,3 +22,11 @@ jobs:
       - name: Build sdl_win32
         run: |
           make -j$(nproc) sdl_win32
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdl_win32-build
+          path: |
+            sa2.sdl_win32
+            SDL2.dll
